@@ -9,7 +9,7 @@ const CALCOM_TEAM_ID = process.env.CALCOM_TEAM_ID;
 
 const FORBIDDEN_TRAFFIC_LIGHT_STATUS = "🔴";
 const EVEN_DISTRIBUTION_GAP_THRESHOLD = Number(process.env.EVEN_DISTRIBUTION_GAP_THRESHOLD) || 6;
-const MIN_AVAILABLE_HOSTS = 15;
+const MIN_AVAILABLE_HOSTS = 20;
 const MEMBERSHIPS_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 let membershipsCache: { data: Map<string, number>; timestamp: number } | null = null;
