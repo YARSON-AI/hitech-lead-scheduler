@@ -44,3 +44,6 @@ next-env.d.ts
 
 # n8n workflows (local only)
 hitech-n8n-workflows/
+
+# planning material (local only)
+.planning/
