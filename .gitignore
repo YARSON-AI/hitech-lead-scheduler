@@ -47,3 +47,10 @@ hitech-n8n-workflows/
 
 # planning material (local only)
 .planning/
+
+# local stub state
+.stub-state/
+
+# test output
+test-results/
+playwright-report/

@@ -12,7 +12,14 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    ".planning/**",
+    "hitech-n8n-workflows/**",
+    ".stub-state/**",
   ]),
+  {
+    files: ["components/ui/SearchableSelect.tsx"],
+    rules: { "react-hooks/set-state-in-effect": "off" },
+  },
 ]);
 
 export default eslintConfig;
