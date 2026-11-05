@@ -1,6 +1,6 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element, react/jsx-key */
+ 
 import { Fragment } from "react";
 import { Button, Card, SearchableSelect, Table, TextInput } from "@/components/ds";
 import { css, type VM } from "@/components/views/vm";

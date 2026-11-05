@@ -1,6 +1,6 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element, react/jsx-key */
+ 
 import { Fragment } from "react";
 import { Alert, Badge, Button, Calendar, Card, EmptyState, FieldLabel, Icon, ProgressSteps, RadioGroup, SearchableSelect, SectionHeader, Spinner, SummaryItem, TextInput, TimeSlots, ToggleButton } from "@/components/ds";
 import { css, type VM } from "@/components/views/vm";

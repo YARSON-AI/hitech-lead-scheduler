@@ -1,6 +1,6 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element, react/jsx-key */
+/* eslint-disable @next/next/no-img-element */
 import { Fragment } from "react";
 import { Alert, Badge, Button, Card, EmptyState, Icon, Spinner, TimeSlots } from "@/components/ds";
 import { css, type VM } from "@/components/views/vm";

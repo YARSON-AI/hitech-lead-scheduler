@@ -1,6 +1,6 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element, react/jsx-key */
+ 
 import { Fragment } from "react";
 import { Badge, Button, Card, Icon, SectionHeader } from "@/components/ds";
 import { css, type VM } from "@/components/views/vm";

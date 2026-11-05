@@ -1,6 +1,7 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element, react/jsx-key */
+/* eslint-disable react-hooks/refs */
+ 
 import { Fragment } from "react";
 import { Alert, Button, Card, IconButton, Tabs } from "@/components/ds";
 import { css, type VM } from "@/components/views/vm";
