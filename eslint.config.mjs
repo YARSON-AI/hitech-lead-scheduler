@@ -15,6 +15,7 @@ const eslintConfig = defineConfig([
     ".planning/**",
     "hitech-n8n-workflows/**",
     ".stub-state/**",
+    "components/ds/ds.js",
   ]),
   {
     files: ["components/ui/SearchableSelect.tsx"],
