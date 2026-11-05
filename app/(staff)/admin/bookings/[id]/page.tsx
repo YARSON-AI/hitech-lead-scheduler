@@ -13,8 +13,5 @@ export default async function BookingPage({ params }: { params: Promise<{ id: st
   const { data } = await supabase.from("bookings").select("*").eq("id", id).neq("status", "failed").maybeSingle();
   if (!data) notFound();
   const { data: events } = await supabase.from("booking_events").select("*").eq("booking_id", id).order("created_at");
-  const { data: partner } = data.spouse_booking_id
-    ? await supabase.from("bookings").select("id, start_at").eq("id", data.spouse_booking_id).maybeSingle()
-    : { data: null };
-  return <BookingDetailScreen booking={data as BookingRow} events={(events ?? []) as BookingEvent[]} partner={partner} />;
+  return <BookingDetailScreen booking={data as BookingRow} events={(events ?? []) as BookingEvent[]} />;
 }

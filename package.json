@@ -13,7 +13,7 @@
     "db:reset": "tsx scripts/reset-dev.ts",
     "gate": "npm run lint && npm run test && npm run build",
     "prepare": "husky || true",
-    "test:e2e": "playwright test"
+    "test:e2e": "npm run db:reset && npm run db:seed && playwright test"
   },
   "dependencies": {
     "@calcom/embed-react": "^1.5.3",

@@ -44,7 +44,7 @@ test("a customer books once on a phone; the row matches a staff booking", async 
   expect(await customer.content()).not.toContain("customer10008");
   await slot.click();
   await customer.getByRole("button", { name: /קביעת פגישה/ }).last().click();
-  await expect(customer.getByRole("heading", { level: 2 })).toBeVisible({ timeout: 20000 });
+  await expect(customer.getByRole("button", { name: /^\d\d:\d\d$/ })).toHaveCount(0, { timeout: 20000 });
   const { data } = await admin().from("bookings").select("*").eq("lead_number", "10008").eq("status", "confirmed").single();
   expect(data.source).toBe("link");
   expect(data.agent_email).toBe(OTHER_AGENT);
@@ -55,7 +55,7 @@ test("a customer books once on a phone; the row matches a staff booking", async 
   expect(events).toEqual([{ actor_role: "customer_link" }]);
 
   await customer.reload();
-  await expect(customer.getByRole("heading", { level: 2 })).toBeVisible();
+  await expect(customer.getByText("כבר נקבעה פגישה")).toBeVisible({ timeout: 15000 });
   await context.close();
 
   const stranger = await fresh(browser);

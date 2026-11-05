@@ -76,9 +76,10 @@ test("a transfer moves a spouse pair together", async ({ page }) => {
 });
 
 test("an agent acts only on their own meetings, without force", async ({ page }) => {
-  const { data } = await admin().from("bookings").select("id, agent_email").eq("status", "confirmed").gte("start_at", new Date().toISOString());
-  const own = data!.find((item) => item.agent_email === AGENT)!;
-  const foreign = data!.find((item) => item.agent_email === OTHER_AGENT)!;
+  await login(page, COORDINATOR);
+  const own = { id: await bookManual(page, "10005", "recAgent001") };
+  const foreign = { id: await bookManual(page, "10006", "recAgent002") };
+  await page.context().clearCookies();
   await login(page, AGENT);
 
   const foreignSlots = await postJson(page, `/api/app/bookings/${foreign.id}/slots`, {});
@@ -120,7 +121,7 @@ test("an agent's hours and overrides change the slots they offer", async ({ page
 test("an agent reschedules and cancels on the phone layout", async ({ browser }) => {
   const context = await browser.newContext({ viewport: { width: 390, height: 800 }, locale: "he-IL", timezoneId: "Asia/Jerusalem" });
   const page = await context.newPage();
-  const { data: existing } = await admin().from("bookings").select("id").eq("agent_email", AGENT).eq("status", "confirmed").gte("start_at", new Date().toISOString()).order("start_at").limit(1).single();
+  const { data: existing } = await admin().from("bookings").select("id").eq("agent_email", AGENT).eq("lead_number", "10005").eq("status", "confirmed").single();
   await login(page, AGENT);
   await page.goto(`/agent/meetings/${existing!.id}`);
   await page.getByRole("button", { name: "שינוי מועד" }).click();

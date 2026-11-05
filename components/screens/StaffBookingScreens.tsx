@@ -240,7 +240,7 @@ function eventDetail(event: BookingEvent): string {
 
 const ROLE_ACTOR: Record<string, string> = { customer_link: "לקוח/ה בקישור", system: "המערכת" };
 
-export function BookingDetailScreen({ booking, events, partner }: { booking: BookingRow; events: BookingEvent[]; partner: { id: string; start_at: string } | null }) {
+export function BookingDetailScreen({ booking, events }: { booking: BookingRow; events: BookingEvent[] }) {
   const router = useRouter();
   const common = useCommonVM();
   const toast = useToast();
@@ -382,7 +382,6 @@ export function BookingDetailScreen({ booking, events, partner }: { booking: Boo
     ),
   };
 
-  void partner;
   return (
     <>
       <BookingDetailView v={v} />

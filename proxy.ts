@@ -11,21 +11,60 @@ const TWO_STEP = /^\/login\/two-step\/?$/;
 
 const notFound = () => new NextResponse(null, { status: 404 });
 
+function contentSecurityPolicy(nonce: string): string {
+  const dev = process.env.NODE_ENV !== "production";
+  return [
+    "default-src 'self'",
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${dev ? " 'unsafe-eval'" : ""}`,
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: https://ht-ins.co.il",
+    "font-src 'self'",
+    `connect-src 'self'${dev ? " ws:" : ""}`,
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+  ].join("; ");
+}
+
+function secured(response: NextResponse, path: string, csp: string): NextResponse {
+  response.headers.set("Content-Security-Policy", csp);
+  response.headers.set("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload");
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("X-Frame-Options", "DENY");
+  response.headers.set("Referrer-Policy", /^\/(b|set-password)(\/|$)/.test(path) ? "no-referrer" : "strict-origin-when-cross-origin");
+  response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  if (/^\/b(\/|$)/.test(path)) response.headers.set("X-Robots-Tag", "noindex, nofollow");
+  return response;
+}
+
 export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const engine = bookingSystem() === "engine";
 
   if (!engine) return ENGINE_ONLY.test(path) ? notFound() : NextResponse.next();
-  if (LEGACY_API.test(path)) return notFound();
-  if (PUBLIC.test(path)) return NextResponse.next();
 
-  let response = NextResponse.next({ request });
+  const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
+  const csp = contentSecurityPolicy(nonce);
+  const forwarded = new Headers(request.headers);
+  forwarded.set("x-nonce", nonce);
+  forwarded.set("Content-Security-Policy", csp);
+  const pass = () => NextResponse.next({ request: { headers: forwarded } });
+
+  if (LEGACY_API.test(path)) return secured(notFound(), path, csp);
+  if (PUBLIC.test(path)) return secured(pass(), path, csp);
+
+  let response = pass();
   const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!, {
+    cookieOptions: { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/" },
     cookies: {
       getAll: () => request.cookies.getAll(),
       setAll: (items) => {
-        items.forEach(({ name, value }) => request.cookies.set(name, value));
-        response = NextResponse.next({ request });
+        items.forEach(({ name, value }) => {
+          request.cookies.set(name, value);
+          forwarded.set("cookie", request.cookies.toString());
+        });
+        response = pass();
         items.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
       },
     },
@@ -38,20 +77,21 @@ export async function proxy(request: NextRequest) {
   const redirect = (to: string) => {
     const target = NextResponse.redirect(new URL(to, request.url));
     response.cookies.getAll().forEach((cookie) => target.cookies.set(cookie));
-    return target;
+    return secured(target, path, csp);
   };
+  const done = () => secured(response, path, csp);
 
   if (!user) {
-    if (LOGIN.test(path)) return response;
+    if (LOGIN.test(path)) return done();
     if (path.startsWith("/api/")) {
-      return NextResponse.json({ error: "unauthenticated", message: "יש להתחבר מחדש" }, { status: 401 });
+      return secured(NextResponse.json({ error: "unauthenticated", message: "יש להתחבר מחדש" }, { status: 401 }), path, csp);
     }
     return redirect("/login");
   }
 
   const role = user.app_metadata?.role as Role | undefined;
-  if (path.startsWith("/api/")) return response;
-  if (!role) return LOGIN.test(path) ? response : redirect("/login");
+  if (path.startsWith("/api/")) return done();
+  if (!role) return LOGIN.test(path) ? done() : redirect("/login");
 
   if (role === "manager") {
     const { data: level } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
@@ -65,7 +105,7 @@ export async function proxy(request: NextRequest) {
   if (role === "agent" && (path === "/" || path.startsWith("/admin"))) return redirect("/agent");
   if (role !== "agent" && path.startsWith("/agent")) return redirect("/admin");
 
-  return response;
+  return done();
 }
 
 export const config = {

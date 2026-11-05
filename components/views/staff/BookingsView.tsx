@@ -23,7 +23,7 @@ export function BookingsView({ v }: { v: VM }) {
         </div>
         {v.isPhone && (
           <>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
               <Tabs variant="pills" tabs={v.rangeTabs} value={v.range} onChange={v.onRange} />
               <Button size="sm" variant={v.filterBtnVariant} iconStart="filter" onClick={v.toggleFilters}>
                 סינון
