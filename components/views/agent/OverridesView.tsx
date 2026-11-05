@@ -40,7 +40,7 @@ export function AgentOverridesView({ v }: { v: VM }) {
                   <Badge tone={o.tone} icon={o.icon}>
                     {o.label}
                   </Badge>
-                  <IconButton icon="trash-2" label="מחיקת ההחרגה" variant="subtle" onClick={v.noop} />
+                  {o.remove ? <IconButton icon="trash-2" label="מחיקת ההחרגה" variant="subtle" onClick={o.remove} /> : <span />}
                 </div>
               </Fragment>
             ))}

@@ -10,7 +10,7 @@ export function CustEmailOpen3({ v }: { v: VM }) {
   void css;
   return (
     <>
-      <Dialog open={v.custEmailOpen} onClose={v.closeCustEmail} title="שינוי מייל הלקוח/ה" description="יום שלישי ● 15.09.2026, 10:00 - 10:30" footer={v.custEmailFooter} {...v.dialogProps}>
+      <Dialog open={v.custEmailOpen} onClose={v.closeCustEmail} title="שינוי מייל הלקוח/ה" description={v.emailDesc} footer={v.custEmailFooter} {...v.dialogProps}>
         <div style={{ display: "flex", flexDirection: "column", gap: "16px", flex: "1 1 auto", minHeight: "0", overflowY: "auto", overflowX: "hidden", overscrollBehavior: "contain" }}>
           {v.detailJoint && (
             <>

@@ -9,6 +9,7 @@ const schema = z.object({
   N8N_MODE: z.enum(["stub", "live"]).default("stub"),
   AIRTABLE_MODE: z.enum(["stub", "live"]).default("stub"),
   ALERT_EMAIL: z.string().email().optional(),
+  LINK_TOKEN_KEY: z.string().regex(/^[0-9a-f]{64}$/),
   APP_ORIGIN: z.string().url().optional(),
 });
 

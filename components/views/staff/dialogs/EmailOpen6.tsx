@@ -19,7 +19,7 @@ export function EmailOpen6({ v }: { v: VM }) {
               פגישות עתידיות שיעברו לתיבה החדשה
             </span>
             <span style={{ fontFamily: "var(--font-display)", fontWeight: "600", fontSize: "22px", color: "var(--text-brand)" }}>
-              12
+              {v.futureCount}
             </span>
           </div>
           <Alert tone="warning" title="מה קורה אחרי השמירה">

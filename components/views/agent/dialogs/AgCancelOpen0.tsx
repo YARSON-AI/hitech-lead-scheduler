@@ -10,7 +10,7 @@ export function AgCancelOpen0({ v }: { v: VM }) {
   void css;
   return (
     <>
-      <Dialog open={v.agCancelOpen} onClose={v.closeAgCancel} title="ביטול פגישה" description="יום שלישי ● 15.09.2026, 10:00 - 10:30 ● יעל כהן" footer={v.agCancelFooter} {...v.dialogProps}>
+      <Dialog open={v.agCancelOpen} onClose={v.closeAgCancel} title="ביטול פגישה" description={v.cancelDesc} footer={v.agCancelFooter} {...v.dialogProps}>
         <div style={{ display: "flex", flexDirection: "column", gap: "20px", flex: "1 1 auto", minHeight: "0", overflowY: "auto", overflowX: "hidden", overscrollBehavior: "contain" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "var(--gap-field)" }}>
             <FieldLabel>

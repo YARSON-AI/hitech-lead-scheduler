@@ -21,9 +21,9 @@ export function AgentRescheduleView({ v }: { v: VM }) {
             שינוי מועד
           </h1>
           <p style={{ marginTop: "4px", color: "var(--text-secondary)" }}>
-            {"יעל כהן ● יום שלישי "}
+            {v.resTitle}
             <span dir="ltr">
-              15.09.2026, 10:00 - 10:30
+              {v.resWhen}
             </span>
           </p>
         </div>
@@ -41,7 +41,7 @@ export function AgentRescheduleView({ v }: { v: VM }) {
           {v.agResEmpty && (
             <>
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                <EmptyState icon="calendar" title="אין מועדים פנויים ביומן שלך" description="לא נמצאו מועדים פנויים ב-21 הימים הקרובים. אפשר להשאיר את המועד הנוכחי, או לפנות למוקד." />
+                <EmptyState icon="calendar" title="אין מועדים פנויים ביומן שלך" description={v.resEmptyText} />
                 <Button variant="outline" size="lg" onClick={v.goAgDetail}>
                   השארת המועד הנוכחי
                 </Button>
@@ -68,7 +68,7 @@ export function AgentRescheduleView({ v }: { v: VM }) {
                   המועד עודכן
                 </h2>
                 <p style={{ color: "var(--text-secondary)" }}>
-                  יעל כהן קיבלה הזמנה מעודכנת במייל.
+                  {v.resDoneText}
                 </p>
                 <div style={{ width: "100%", background: "var(--surface-subtle)", borderRadius: "var(--radius-control)", padding: "6px 20px", textAlign: "start" }}>
                   {(v.agResFacts ?? []).map((f: VM, index: number) => (
@@ -98,7 +98,7 @@ export function AgentRescheduleView({ v }: { v: VM }) {
                 {v.agResTaken && (
                   <>
                     <Alert {...v.alertProps} tone="warning" title="המועד נתפס לפני רגע">
-                      11:00 אינו פנוי יותר. השעות הפנויות רועננו — בחר/י מועד אחר.
+                      {v.resTakenText}
                     </Alert>
                   </>
                 )}
@@ -125,7 +125,7 @@ export function AgentRescheduleView({ v }: { v: VM }) {
                           <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "var(--color-primary)", flex: "none" }} />
                           <span>
                             <span dir="ltr">
-                              10:00
+                              {v.resCurrentTime}
                             </span>
                             {" הוא המועד הנוכחי"}
                           </span>

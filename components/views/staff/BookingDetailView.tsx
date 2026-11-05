@@ -37,7 +37,7 @@ export function BookingDetailView({ v }: { v: VM }) {
                           {v.dLabel}
                         </Badge>
                         <Badge tone="neutral">
-                          הקצאה אוטומטית
+                          {v.dAssign}
                         </Badge>
                         {v.detailJoint && (
                           <>
@@ -71,7 +71,7 @@ export function BookingDetailView({ v }: { v: VM }) {
                           {v.dLabel}
                         </Badge>
                         <Badge tone="neutral">
-                          הקצאה אוטומטית
+                          {v.dAssign}
                         </Badge>
                         {v.detailJoint && (
                           <>
@@ -107,12 +107,12 @@ export function BookingDetailView({ v }: { v: VM }) {
                   <>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", borderTop: "1px solid var(--border-subtle)", paddingTop: "18px" }}>
                       <div style={{ flex: "1 1 220px", minWidth: "0", display: "flex" }}>
-                        <Button size="lg" fullWidth={true} iconStart="calendar" onClick={v.showSaved}>
+                        <Button size="lg" fullWidth={true} iconStart="calendar" onClick={v.goReschedule}>
                           שינוי מועד
                         </Button>
                       </div>
                       <div style={{ flex: "1 1 220px", minWidth: "0", display: "flex" }}>
-                        <Button variant="secondary" size="lg" fullWidth={true} iconStart="users" onClick={v.showSaved}>
+                        <Button variant="secondary" size="lg" fullWidth={true} iconStart="users" onClick={v.goTransfer}>
                           העברה לסוכן/ת
                         </Button>
                       </div>
@@ -136,10 +136,10 @@ export function BookingDetailView({ v }: { v: VM }) {
                 {v.detailActPhone && (
                   <>
                     <div style={{ display: "flex", flexDirection: "column", gap: "10px", borderTop: "1px solid var(--border-subtle)", paddingTop: "16px" }}>
-                      <Button size="lg" fullWidth={true} iconStart="calendar" onClick={v.showSaved}>
+                      <Button size="lg" fullWidth={true} iconStart="calendar" onClick={v.goReschedule}>
                         שינוי מועד
                       </Button>
-                      <Button variant="secondary" size="lg" fullWidth={true} iconStart="users" onClick={v.showSaved}>
+                      <Button variant="secondary" size="lg" fullWidth={true} iconStart="users" onClick={v.goTransfer}>
                         העברה לסוכן/ת
                       </Button>
                       {v.detailNotPast && (

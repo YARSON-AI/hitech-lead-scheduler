@@ -22,11 +22,11 @@ export function AgentMeetingDetailView({ v }: { v: VM }) {
               <div>
                 <h1 style={{ font: "var(--type-h1)", fontSize: "var(--text-2xl)" }}>
                   <span dir="ltr">
-                    10:00 - 10:30
+                    {v.dTime}
                   </span>
                 </h1>
                 <p style={{ marginTop: "4px", color: "var(--text-secondary)" }}>
-                  יום שלישי ● 15.09.2026
+                  {v.dWhen}
                 </p>
               </div>
               <Badge tone={v.ftTone} icon={v.ftIcon}>
@@ -34,25 +34,25 @@ export function AgentMeetingDetailView({ v }: { v: VM }) {
               </Badge>
             </div>
             <Card tone="subtle" padding="sm" style={css(v.summaryBox)}>
-              <SummaryItem label="לקוח/ה" value="יעל כהן" />
-              <SummaryItem label="מספר ליד" value="84213" ltr={true} />
-              <SummaryItem label="טלפון" value="050-0000000" ltr={true} />
-              <SummaryItem label="סוג פגישה" value="פגישה מרחוק" />
-              <SummaryItem label="סוג ליד" value="פנסיה" last={true} />
+              <SummaryItem label="לקוח/ה" value={v.dCustomer} />
+              <SummaryItem label="מספר ליד" value={v.dLead} ltr={true} />
+              <SummaryItem label="טלפון" value={v.dPhone} ltr={true} />
+              <SummaryItem label="סוג פגישה" value={v.dKind} />
+              <SummaryItem label="סוג ליד" value={v.dTopic} last={true} />
             </Card>
             <div>
               {v.teamsFull}
             </div>
             <div style={{ display: "flex", gap: "12px", flexWrap: "nowrap" }}>
               <div style={{ flex: "1 1 0", minWidth: "0", display: "flex" }}>
-                <Button size="lg" fullWidth={true} iconStart="calendar" onClick={v.goAgReschedule}>
+                {v.canAct && <Button size="lg" fullWidth={true} iconStart="calendar" onClick={v.goAgReschedule}>
                   שינוי מועד
-                </Button>
+                </Button>}
               </div>
               <div style={{ flex: "1 1 0", minWidth: "0", display: "flex" }}>
-                <Button variant="destructive" size="lg" fullWidth={true} iconStart="x" onClick={v.openAgCancel}>
+                {v.canAct && <Button variant="destructive" size="lg" fullWidth={true} iconStart="x" onClick={v.openAgCancel}>
                   ביטול פגישה
-                </Button>
+                </Button>}
               </div>
             </div>
           </div>

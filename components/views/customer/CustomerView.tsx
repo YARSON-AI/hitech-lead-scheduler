@@ -10,8 +10,8 @@ export function CustomerView({ v }: { v: VM }) {
   void css;
   return (
     <>
-      <div style={{ padding: "24px 16px 64px", display: "flex", justifyContent: "center" }}>
-        <div style={{ width: "100%", maxWidth: `${v.custFrameMax}`, background: "var(--bg-page-gradient)", borderRadius: "var(--radius-card-lg)", boxShadow: "var(--shadow-lg)", position: "relative", overflow: "hidden", minHeight: "760px", display: "flex", flexDirection: "column" }}>
+      <div>
+        <div style={{ width: "100%", position: "relative", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
           <header style={{ display: "flex", justifyContent: "center", padding: "22px 16px 6px" }}>
             <img src="/brand/logo.png" alt="הייטק סוכנות לביטוח" style={{ height: `${v.custLogoH}`, width: "auto", display: "block" }} />
           </header>
@@ -47,7 +47,7 @@ export function CustomerView({ v }: { v: VM }) {
                           <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                             {" "}{v.custKindBadge}{" "}
                             <Badge tone="neutral" icon="clock">
-                              30 דקות
+                              {v.durationLabel}
                             </Badge>
                           </div>
                         </div>

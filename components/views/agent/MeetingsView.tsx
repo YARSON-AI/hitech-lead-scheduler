@@ -16,12 +16,12 @@ export function AgentMeetingsView({ v }: { v: VM }) {
             הפגישות שלי
           </h1>
           <p style={{ marginTop: "4px", color: "var(--text-secondary)" }}>
-            3 פגישות בשבוע הקרוב
+            {v.agSub}
           </p>
         </div>
         {(v.agMeetings ?? []).map((m: VM, index: number) => (
           <Fragment key={m.key ?? m.id ?? index}>
-            <Card padding="none" onClick={v.goAgDetail} {...v.rowCardProps}>
+            <Card padding="none" onClick={m.go} {...v.rowCardProps}>
               <div style={{ display: "flex", alignItems: "stretch", minHeight: "132px" }}>
                 <div style={{ flex: "none", width: "116px", background: "var(--color-primary-soft)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "2px", padding: "16px 10px" }}>
                   <div style={{ font: "var(--type-caption)", color: "var(--teal-700)" }}>

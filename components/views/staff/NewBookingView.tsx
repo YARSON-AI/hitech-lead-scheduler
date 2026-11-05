@@ -273,11 +273,15 @@ export function NewBookingView({ v }: { v: VM }) {
                           <TimeSlots slots={v.newSlots} value={v.newSlot} onChange={v.pickNewSlot} columns={4} />
                           <div style={{ marginTop: "4px", paddingTop: "14px", borderTop: "1px dashed var(--border-default)", display: "flex", flexDirection: "column", gap: "10px" }}>
                             <div style={{ font: "var(--type-body-sm)", color: "var(--text-secondary)", textWrap: "pretty" }}>
-                              הלקוח/ה מעדיף/ה לבחור מועד בעצמו/ה?
+                              {v.gridForce ? "מועד שהסוכן/ת אינו פנוי/ה בו?" : "הלקוח/ה מעדיף/ה לבחור מועד בעצמו/ה?"}
                             </div>
-                            <Button variant="outline" size="md" fullWidth={true} iconStart="mail" onClick={v.newToLink}>
+                            {v.gridForce ? (
+                              <Button variant="secondary" size="md" fullWidth={true} iconStart="alert-triangle" onClick={v.showForcedNew}>
+                                קביעה כפויה
+                              </Button>
+                            ) : <Button variant="outline" size="md" fullWidth={true} iconStart="mail" onClick={v.newToLink}>
                               שליחת קישור ללקוח
-                            </Button>
+                            </Button>}
                           </div>
                         </div>
                       </div>

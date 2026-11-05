@@ -26,7 +26,7 @@ export function ExcOpen7({ v }: { v: VM }) {
               <Calendar value={v.excDate} onChange={v.pickExcDate} disabledWeekdays={v.noDisabled} today={v.todayDate} {...v.excCalProps} />
             </div>
           </div>
-          <Checkbox checked={v.excAllDay} onChange={v.toggleExcAllDay} label="כל היום" />
+          {v.showAllDay && <Checkbox checked={v.excAllDay} onChange={v.toggleExcAllDay} label="כל היום" />}
           {v.excHours && (
             <>
               <div style={{ display: "flex", flexDirection: "column", gap: "var(--gap-field)" }}>

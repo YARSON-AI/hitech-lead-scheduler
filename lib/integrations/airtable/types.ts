@@ -14,6 +14,8 @@ export interface RosterAgent {
   weightLowered: boolean;
   monthlyCount: number;
   exclusions: Record<string, boolean>;
+  blockedSince?: string;
+  blockReason?: string;
 }
 
 export interface Specialization {

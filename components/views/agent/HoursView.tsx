@@ -83,7 +83,7 @@ export function AgentHoursView({ v }: { v: VM }) {
             <Button size="lg" iconStart="check" onClick={v.agSaveHours} style={css(v.flex1)}>
               שמירת שעות
             </Button>
-            <Button variant="ghost" size="lg" onClick={v.noop}>
+            <Button variant="ghost" size="lg" onClick={v.hoursReset}>
               ביטול
             </Button>
           </div>

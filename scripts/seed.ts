@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import "./lib";
 import { FIXTURE_DOMAIN, FIXTURE_LEADS, ROSTER } from "../lib/integrations/fixtures";
 import { addDays, fromWall, todayInJerusalem, weekdayOf } from "../lib/engine/time";
+import { hashLinkToken, newToken, sealToken } from "../lib/booking/link-token";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const secret = process.env.SUPABASE_SECRET_KEY!;
@@ -234,6 +235,32 @@ async function main() {
     agent_name: ROSTER[2].name,
     booking_id: (inserted ?? [])[4]?.id,
   });
+
+  const key = process.env.LINK_TOKEN_KEY!;
+  const linkRow = (index: number, agentIndex: number | null, status: string, offsetDays: number) => {
+    const token = newToken();
+    const leadRow = lead(index);
+    return {
+      token_hash: hashLinkToken(token),
+      token_sealed: sealToken(token, key),
+      lead_number: leadRow.number,
+      lead_data: { number: leadRow.number, id: leadRow.id, customerId: leadRow.customerId, fullName: leadRow.fullName, email: leadRow.email, phone: leadRow.phone, interestName: leadRow.interestName },
+      mode: agentIndex === null ? "auto" : "manual",
+      agent_email: agentIndex === null ? null : ROSTER[agentIndex].email,
+      agent_name: agentIndex === null ? null : ROSTER[agentIndex].name,
+      created_by: coordinator,
+      created_by_name: "נועה מתאמת",
+      expires_at: new Date(Date.now() + offsetDays * 86400000).toISOString(),
+      status,
+    };
+  };
+  const { error: linkError } = await db.from("booking_links").insert([
+    linkRow(12, 0, "open", 6),
+    linkRow(13, null, "open", 5),
+    linkRow(14, 1, "revoked", 2),
+    linkRow(15, 0, "open", -1),
+  ]);
+  if (linkError) throw linkError;
 
   console.log(`Seed: ${accounts.length} accounts, ${ROSTER.length} roster agents' hours, ${events.length} bookings.`);
 }

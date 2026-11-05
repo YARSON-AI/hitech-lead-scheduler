@@ -148,10 +148,10 @@ export function AgentSettingsView({ v }: { v: VM }) {
             ))}
           </div>
           <div style={{ display: "flex", gap: "12px", marginTop: "20px", flexWrap: "wrap" }}>
-            <Button size="md" iconStart="check" onClick={v.showSaved}>
+            <Button size="md" iconStart="check" onClick={v.agSaveHours}>
               שמירת שעות
             </Button>
-            <Button variant="ghost" size="md" onClick={v.noop}>
+            <Button variant="ghost" size="md" onClick={v.hoursReset}>
               ביטול
             </Button>
           </div>
@@ -180,7 +180,7 @@ export function AgentSettingsView({ v }: { v: VM }) {
                   <Badge tone={o.tone} icon={o.icon}>
                     {o.label}
                   </Badge>
-                  <IconButton icon="trash-2" label="מחיקת ההחרגה" variant="subtle" onClick={v.noop} />
+                  {o.remove ? <IconButton icon="trash-2" label="מחיקת ההחרגה" variant="subtle" onClick={o.remove} /> : <span />}
                 </div>
               </Fragment>
             ))}

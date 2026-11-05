@@ -61,7 +61,7 @@ export function LinkNewView({ v }: { v: VM }) {
                               שינוי ליד
                             </Button>
                           </div>
-                          <SummaryItem label="שם הלקוח" value="יעל כהן" last={true} />
+                          <SummaryItem label="שם הלקוח" value={v.lkCustomer} last={true} />
                         </Card>
                         <SectionHeader title="סוכן/ת" description={v.lkAgentHint} />
                         {v.lkStaff && (
@@ -79,7 +79,7 @@ export function LinkNewView({ v }: { v: VM }) {
                         )}
                         {v.lkIsAgent && (
                           <>
-                            <TextInput label="סוכן/ת" value="דניאל כהן" disabled={true} />
+                            <TextInput label="סוכן/ת" value={v.lkOwnName} disabled={true} />
                           </>
                         )}
                         <div style={{ borderTop: "1px solid var(--border-subtle)", paddingTop: "20px" }}>

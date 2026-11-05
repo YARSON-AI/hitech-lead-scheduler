@@ -62,7 +62,7 @@ export function BookingsView({ v }: { v: VM }) {
             <Card padding="none">
               <div style={css(v.tableScroll)} className="hti-xscroll">
                 <div>
-                  <Table columns={v.bookingColumns} rows={v.bookingRows} rowKey="id" onRowClick={v.goDetail} sortKey="start" sortDir="asc" emptyText="לא נמצאו פגישות בטווח הזה" />
+                  <Table columns={v.bookingColumns} rows={v.bookingRows} rowKey="id" onRowClick={v.goDetail} sortKey={v.sortKey} sortDir={v.sortDir} onSort={v.onSort} emptyText="לא נמצאו פגישות בטווח הזה" />
                 </div>
               </div>
             </Card>

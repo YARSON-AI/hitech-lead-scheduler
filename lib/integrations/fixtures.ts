@@ -22,7 +22,7 @@ const AGENTS: Seed[] = [
   ["עומר", "חדד", "omer", { monthlyQuota: 35, dailyQuota: 4, weight: 100, monthlyCount: 35 }],
   ["תמר", "אוחיון", "tamar", { dailyQuota: 5, weight: 100, monthlyCount: 3 }],
   ["גיל", "שלום", "gil", { monthlyQuota: 25, dailyQuota: 3, weight: 100, monthlyCount: 25, exclusions: { "בריאות": true } }],
-  ["ליאת", "גבאי", "liat", { monthlyQuota: 50, dailyQuota: 5, weight: 100, monthlyCount: 1, trafficLight: "🔴" }],
+  ["ליאת", "גבאי", "liat", { monthlyQuota: 50, dailyQuota: 5, weight: 100, monthlyCount: 1, trafficLight: "🔴", blockedSince: "2026-09-02", blockReason: "חופשה ממושכת" }],
   ["אורן", "כץ", "oren", { monthlyQuota: 40, dailyQuota: 4, weight: 100, monthlyCount: 2, exclusions: { "פנסיה": true } }],
   ["נטע", "רוזן", "neta", { monthlyQuota: 40, dailyQuota: 4, weight: 100, monthlyCount: 0 }],
   ["אלון", "ברק", "alon", { monthlyQuota: 30, dailyQuota: 3, weight: 90, monthlyCount: 2 }],

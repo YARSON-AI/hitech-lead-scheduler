@@ -40,7 +40,7 @@ export function SettingsView({ v }: { v: VM }) {
                             </div>
                           </div>
                           <div style={{ display: "flex", alignItems: "center", gap: "8px", flex: "none" }}>
-                            <input type="text" inputMode="numeric" value={f.value} dir="ltr" style={{ height: "44px", width: "52px", border: "2px solid var(--border-default)", borderRadius: "var(--radius-control)", padding: "0", fontFamily: "var(--font-body)", fontSize: "var(--text-base)", color: "var(--text-primary)", background: "var(--surface-card)", textAlign: "center" }} />
+                            <input type="text" inputMode="numeric" value={f.value} onChange={f.onChange} aria-label={f.label} dir="ltr" style={{ height: "44px", width: "52px", border: "2px solid var(--border-default)", borderRadius: "var(--radius-control)", padding: "0", fontFamily: "var(--font-body)", fontSize: "var(--text-base)", color: "var(--text-primary)", background: "var(--surface-card)", textAlign: "center" }} />
                             <span style={{ font: "var(--type-body-sm)", color: "var(--text-secondary)", width: "44px" }}>
                               {f.unit}
                             </span>
@@ -59,10 +59,10 @@ export function SettingsView({ v }: { v: VM }) {
                     )}
                   </div>
                   <div style={{ paddingTop: "16px", borderTop: "1px solid var(--border-subtle)", display: "flex", gap: "12px", flexWrap: "wrap" }}>
-                    <Button size="md" iconStart="check" onClick={v.showSaved}>
+                    <Button size="md" iconStart="check" onClick={p.save}>
                       שמירה
                     </Button>
-                    <Button variant="ghost" size="md" onClick={v.noop}>
+                    <Button variant="ghost" size="md" onClick={p.reset}>
                       איפוס
                     </Button>
                   </div>
@@ -96,13 +96,13 @@ export function SettingsView({ v }: { v: VM }) {
                     כמה ימים קישור שנשלח ללקוח/ה נשאר פתוח. חל על קישורים חדשים בלבד.
                   </div>
                 </div>
-                <input type="text" inputMode="numeric" value="7" dir="ltr" style={{ height: "44px", width: "52px", border: "2px solid var(--border-default)", borderRadius: "var(--radius-control)", padding: "0", fontFamily: "var(--font-body)", fontSize: "var(--text-base)", color: "var(--text-primary)", background: "var(--surface-card)", textAlign: "center" }} />
+                <input type="text" inputMode="numeric" value={v.linkDays} onChange={v.onLinkDays} aria-label="תוקף קישור הזמנה" dir="ltr" style={{ height: "44px", width: "52px", border: "2px solid var(--border-default)", borderRadius: "var(--radius-control)", padding: "0", fontFamily: "var(--font-body)", fontSize: "var(--text-base)", color: "var(--text-primary)", background: "var(--surface-card)", textAlign: "center" }} />
               </div>
               <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-                <Button size="md" iconStart="check" onClick={v.showSaved}>
+                <Button size="md" iconStart="check" onClick={v.saveLink}>
                   שמירה
                 </Button>
-                <Button variant="ghost" size="md" onClick={v.noop}>
+                <Button variant="ghost" size="md" onClick={v.resetLink}>
                   איפוס
                 </Button>
               </div>

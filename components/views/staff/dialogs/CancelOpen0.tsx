@@ -10,7 +10,7 @@ export function CancelOpen0({ v }: { v: VM }) {
   void css;
   return (
     <>
-      <Dialog open={v.cancelOpen} onClose={v.closeCancel} title="ביטול פגישה" description="יום שלישי ● 15.09.2026, 10:00 - 10:30 ● יעל כהן ● דניאל כהן" footer={v.cancelFooter}>
+      <Dialog open={v.cancelOpen} onClose={v.closeCancel} title="ביטול פגישה" description={v.cancelDesc} footer={v.cancelFooter}>
         <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "var(--gap-field)" }}>
             <FieldLabel>
