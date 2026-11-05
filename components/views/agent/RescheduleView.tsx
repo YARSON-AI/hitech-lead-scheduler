@@ -106,7 +106,7 @@ export function AgentRescheduleView({ v }: { v: VM }) {
                   המועד הנוכחי מסומן ונשאר זמין, כך שאפשר להשאיר אותו.
                 </Alert>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "24px", alignItems: "flex-start" }}>
-                  <Calendar value={v.agResDate} onChange={v.pickAgResDate} today={v.todayDate} availableDates={v.agResDates} />
+                  <Calendar value={v.agResDate} onChange={v.pickAgResDate} today={v.todayDate} availableDates={v.agResDates} onlyAvailable={true} disabledWeekdays={[]} />
                   <div style={{ flex: "1 1 240px", minWidth: "0", display: "flex", flexDirection: "column", gap: "12px", alignSelf: "stretch" }}>
                     <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: "8px" }}>
                       <div style={{ font: "var(--type-label)", color: "var(--gray-700)" }}>

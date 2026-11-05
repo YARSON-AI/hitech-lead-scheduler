@@ -258,7 +258,7 @@ export function NewBookingView({ v }: { v: VM }) {
                         </>
                       )}
                       <div style={{ display: "flex", flexWrap: "wrap", gap: "24px", alignItems: "flex-start" }}>
-                        <Calendar value={v.newDate} onChange={v.pickNewDate} today={v.todayDate} availableDates={v.availableDates} />
+                        <Calendar value={v.newDate} onChange={v.pickNewDate} today={v.todayDate} availableDates={v.availableDates} onlyAvailable={true} disabledWeekdays={[]} />
                         <div style={{ flex: "1 1 260px", minWidth: "240px", display: "flex", flexDirection: "column", gap: "12px", alignSelf: "stretch" }}>
                           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: "8px" }}>
                             <div style={{ font: "var(--type-label)", color: "var(--gray-700)" }}>

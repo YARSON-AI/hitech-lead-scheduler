@@ -451,6 +451,7 @@ function Calendar({
   minDate,
   disabledWeekdays = [6],
   availableDates = [],
+  onlyAvailable,
   today = new Date(),
   style
 }) {
@@ -525,7 +526,7 @@ function Calendar({
     }
   }, cells.map((d, i) => {
     const outside = d.getMonth() !== view.getMonth();
-    const disabled = minDate && d < new Date(minDate.getFullYear(), minDate.getMonth(), minDate.getDate()) || disabledWeekdays.includes(d.getDay());
+    const disabled = minDate && d < new Date(minDate.getFullYear(), minDate.getMonth(), minDate.getDate()) || disabledWeekdays.includes(d.getDay()) || (onlyAvailable && !avail.some(a => sameDay(a, d)));
     return /*#__PURE__*/React.createElement(DayBtn, {
       key: i,
       d: d,
