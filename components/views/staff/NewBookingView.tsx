@@ -96,7 +96,7 @@ export function NewBookingView({ v }: { v: VM }) {
                       </Alert>
                     </>
                   )}
-                  <RadioGroup options={v.assignOptions} value={v.newAssign} onChange={v.onNewAssign} />
+                  {!v.newSpouse && <RadioGroup options={v.assignOptions} value={v.newAssign} onChange={v.onNewAssign} />}
                   {v.newManual && (
                     <>
                       <div style={{ display: "flex", flexDirection: "column", gap: "20px" }} className="hti-slide-down">
@@ -146,7 +146,7 @@ export function NewBookingView({ v }: { v: VM }) {
                   </div>
                   <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
                     <Badge tone="neutral" icon="clock">
-                      30 דקות
+                      {v.durationLabel}
                     </Badge>
                     <Badge tone={v.locationTone} icon={v.locationIcon}>
                       {v.meetingKind}
@@ -158,7 +158,7 @@ export function NewBookingView({ v }: { v: VM }) {
                     <div style={{ marginBottom: "20px", display: "flex", flexDirection: "column", gap: "12px" }}>
                       <SearchableSelect label="סוכן/ת חדש/ה*" options={v.agentPickOptions} value={v.transferAgent} onChange={v.onTransferAgent} placeholder="בחר סוכן/ת" />
                       <Alert {...v.alertProps} tone="info">
-                        המועד הקיים של הפגישה, יום שלישי 15.09.2026 בשעה 10:00, ייבחר מראש אם הסוכן/ת החדש/ה פנוי/ה בו. פגישה זוגית אינה עוברת יחד — יש להעביר כל פגישה בנפרד.
+                        {v.pkTransferText}
                       </Alert>
                     </div>
                   </>
@@ -167,7 +167,7 @@ export function NewBookingView({ v }: { v: VM }) {
                   <>
                     <div style={{ marginBottom: "20px" }}>
                       <Alert {...v.alertProps} tone="info" title="שינוי מועד">
-                        אותו/אותה סוכן/ת ואותה פגישה. המועד הקיים, יום שלישי 15.09.2026 בשעה 10:00, חסום ואינו זמין לבחירה — הוא יתפנה רק לאחר שהפגישה תועבר או תבוטל.
+                        {v.pkRescheduleText}
                       </Alert>
                     </div>
                   </>
@@ -191,9 +191,10 @@ export function NewBookingView({ v }: { v: VM }) {
                           <FieldLabel>
                             שעה*
                           </FieldLabel>
-                          <input type="time" value="18:30" dir="ltr" style={{ height: "44px", border: "2px solid var(--border-default)", borderRadius: "var(--radius-control)", padding: "0 var(--pad-input-x)", font: "var(--type-body)", fontFamily: "var(--font-body)", color: "var(--text-primary)", background: "var(--surface-card)", width: "100%" }} />
+                          <input type="time" value={v.forceTime} onChange={v.onForceTime} dir="ltr" style={{ height: "44px", border: "2px solid var(--border-default)", borderRadius: "var(--radius-control)", padding: "0 var(--pad-input-x)", font: "var(--type-body)", fontFamily: "var(--font-body)", color: "var(--text-primary)", background: "var(--surface-card)", width: "100%" }} />
                         </div>
                       </div>
+                      {v.forceErr && <Alert tone="error">{v.forceErr}</Alert>}
                       <div style={{ display: "flex", gap: "12px", paddingTop: "4px" }}>
                         <div style={{ flex: "1", minWidth: "0", display: "flex" }}>
                           <Button variant="outline" size="lg" fullWidth={true} iconStart="arrow-right" onClick={v.newBack}>
@@ -201,7 +202,7 @@ export function NewBookingView({ v }: { v: VM }) {
                           </Button>
                         </div>
                         <div style={{ flex: "2", minWidth: "0", display: "flex" }}>
-                          <Button size="lg" fullWidth={true} iconStart="calendar" onClick={v.newConfirm}>
+                          <Button size="lg" fullWidth={true} iconStart="calendar" loading={v.confirmBusy} onClick={v.newForceConfirm}>
                             קביעת פגישה כפויה
                           </Button>
                         </div>
@@ -222,7 +223,7 @@ export function NewBookingView({ v }: { v: VM }) {
                 {v.pkEmpty && (
                   <>
                     <div>
-                      <EmptyState icon="calendar" title="אין מועדים פנויים בחלון התיאום" description="לא נמצאו מועדים פנויים ב-21 הימים הקרובים. אפשר לבחור סוכן/ת אחר/ת, או לקבוע מועד כפוי בתיאום טלפוני." />
+                      <EmptyState icon="calendar" title="אין מועדים פנויים בחלון התיאום" description={v.pkEmptyText} />
                       <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", justifyContent: "center" }}>
                         <Button variant="outline" size="lg" iconStart="arrow-right" onClick={v.newBack}>
                           בחירת סוכן/ת אחר/ת
@@ -251,7 +252,7 @@ export function NewBookingView({ v }: { v: VM }) {
                         <>
                           <div style={{ marginBottom: "16px" }}>
                             <Alert {...v.alertProps} tone="warning" title="המועד נתפס לפני רגע">
-                              10:30 אינו פנוי יותר. השעות הפנויות רועננו — בחר מועד אחר.
+                              {v.pkTakenText}
                             </Alert>
                           </div>
                         </>
@@ -287,7 +288,7 @@ export function NewBookingView({ v }: { v: VM }) {
                           </Button>
                         </div>
                         <div style={{ flex: "2", minWidth: "0", display: "flex" }}>
-                          <Button size="lg" fullWidth={true} iconStart="calendar" disabled={v.noSlot} onClick={v.newConfirm}>
+                          <Button size="lg" fullWidth={true} iconStart="calendar" disabled={v.noSlot} loading={v.confirmBusy} onClick={v.newConfirm}>
                             {v.confirmLabel}
                           </Button>
                         </div>
