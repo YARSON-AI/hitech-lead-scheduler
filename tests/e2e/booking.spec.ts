@@ -97,6 +97,62 @@ test("a spouse booking goes to the partner's agent and links both ways", async (
   expect(mine.profile).toBe("spouse");
 });
 
+test("a spouse meeting can be attached right next to the partner's meeting", async ({ page }) => {
+  await admin().from("bookings").update({ status: "cancelled" }).in("lead_number", ["10019", "10020"]).eq("status", "confirmed");
+  const first = await firstSlot(page, { mode: "manual", agentId: "recAgent013", leadNumber: "10019" });
+  const partner = await postJson(page, "/api/app/bookings", { mode: "manual", agentId: "recAgent013", leadNumber: "10019", date: first.date, time: first.time, forced: false });
+  expect(partner.status()).toBe(200);
+  const partnerId = (await partner.json()).id;
+  const { data: partnerRow } = await admin().from("bookings").select("start_at, end_at").eq("id", partnerId).single();
+
+  await page.goto("/");
+  await page.locator("input").first().fill("10020");
+  await page.getByRole("switch", { name: "בן/בת זוג" }).click();
+  await page.locator("input").nth(1).fill("10019");
+  await page.getByRole("button", { name: "המשך" }).click();
+  await expect(page.getByRole("radio", { name: /הצמדה לפגישה הקיימת/ })).toHaveAttribute("aria-checked", "true", { timeout: 20000 });
+  const book = page.getByRole("button", { name: "קביעת פגישה" });
+  await expect(book).toBeDisabled();
+  await page.locator(".hti-pchip:not([disabled])").first().click();
+  const [response] = await Promise.all([page.waitForResponse("**/api/app/bookings"), book.click()]);
+  expect(response.status()).toBe(200);
+
+  const { data } = await admin().from("bookings").select("start_at, end_at, spouse_booking_id").eq("lead_number", "10020").eq("status", "confirmed").single();
+  expect(data!.spouse_booking_id).toBe(partnerId);
+  const touches = new Date(data!.end_at).getTime() === new Date(partnerRow!.start_at).getTime() || new Date(data!.start_at).getTime() === new Date(partnerRow!.end_at).getTime();
+  expect(touches).toBe(true);
+});
+
+test("a spouse meeting follows the partner's most recently booked meeting", async ({ page }) => {
+  await admin().from("bookings").update({ status: "cancelled" }).in("lead_number", ["10019", "10020"]).eq("status", "confirmed");
+  const later = await firstSlot(page, { mode: "manual", agentId: "recAgent013", leadNumber: "10019" });
+  const laterDate = Object.keys(later.slots).sort()[3];
+  expect((await postJson(page, "/api/app/bookings", { mode: "manual", agentId: "recAgent013", leadNumber: "10019", date: laterDate, time: later.slots[laterDate][0], forced: false })).status()).toBe(200);
+  const earlier = await firstSlot(page, { mode: "manual", agentId: AGENT_ID, leadNumber: "10019" });
+  const booked = await postJson(page, "/api/app/bookings", { mode: "manual", agentId: AGENT_ID, leadNumber: "10019", date: earlier.date, time: earlier.time, forced: false });
+  expect(booked.status()).toBe(200);
+  const latest = await booked.json();
+  const check = await postJson(page, "/api/app/leads/check", { leadNumber: "10020", spouseLeadNumber: "10019" });
+  const { partner } = await check.json();
+  expect(partner.start).toBe(new Date(latest.start).toISOString().replace(".000Z", "+00:00"));
+  expect(partner.agentName).toBe(latest.agentName);
+});
+
+test("the lead form works from the keyboard", async ({ page }) => {
+  await page.goto("/");
+  await page.locator("input").first().fill("10002");
+  await page.keyboard.press("Tab");
+  const toggle = page.getByRole("switch", { name: "בן/בת זוג" });
+  await expect(toggle).toBeFocused();
+  expect(await toggle.evaluate((el) => getComputedStyle(el).outlineStyle)).toBe("solid");
+  await page.keyboard.press("Space");
+  const spouse = page.locator("input").nth(1);
+  await expect(spouse).toBeFocused();
+  await spouse.pressSequentially("10001");
+  await spouse.press("Enter");
+  await expect(page.getByRole("heading", { name: "הקצאת סוכן" })).toBeVisible({ timeout: 20000 });
+});
+
 test("a failed handoff leaves no meeting behind", async ({ page }) => {
   const body = { mode: "manual", agentId: AGENT_ID, leadNumber: "10019" };
   await admin().from("bookings").update({ status: "cancelled" }).eq("lead_number", "10019").eq("status", "confirmed");

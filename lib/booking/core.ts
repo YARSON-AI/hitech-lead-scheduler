@@ -121,14 +121,14 @@ export async function resolveAssignment(input: AssignmentInput): Promise<Assignm
     const found = await n8n().spouseAgent(spouseLead.id);
     const agent = found && roster.find((row) => row.email === found.agentEmail);
     if (!agent) throw new ApiError(404, "spouse_agent_not_found", "לא נמצא סוכן משויך לליד של בן/בת הזוג");
-    const { data: partner } = await adminClient()
+    const { data: meetings } = await adminClient()
       .from("bookings")
       .select("*")
       .eq("lead_id", spouseLead.id)
+      .eq("agent_email", agent.email)
       .eq("status", "confirmed")
-      .order("start_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .order("created_at", { ascending: false });
+    const partner = (meetings ?? []).find((row) => new Date(row.start_at).getTime() > Date.now()) ?? meetings?.[0] ?? null;
     const ids = partner ? [partner.id, partner.outlook_event_id].filter(Boolean) : [];
     traceStep("assignment", { mode: "spouse", agent: agent.name, partnerBooking: partner?.id ?? null });
     return { mode: "spouse", candidates: [agent], query: { profile: "spouse", ignoreQuota: true, unpaddedBlockIds: ids }, partner, spouseLead };
@@ -143,7 +143,7 @@ export async function resolveAssignment(input: AssignmentInput): Promise<Assignm
   }
 
   const today = jerusalemDayInfo();
-  const { agents, excluded, dropped } = buildPool(roster, {
+  const { agents, dropped } = buildPool(roster, {
     mode: "auto",
     specialization: input.specialization,
     interest: input.lead.interestName,
@@ -156,8 +156,60 @@ export async function resolveAssignment(input: AssignmentInput): Promise<Assignm
     order: agents.map((agent) => ({ agent: agent.name, paceRatio: Math.round(paceRatio(agent, today) * 100) / 100 })),
     dropped,
   });
-  console.log(JSON.stringify({ level: "info", at: "pool", size: agents.length, excluded }));
   return { mode: "auto", candidates: agents, query: { profile: "regular" }, partner: null, spouseLead: null };
+}
+
+function attachStarts(partner: BookingRow, durationMin: number): { before: Date; after: Date } {
+  return { before: new Date(new Date(partner.start_at).getTime() - durationMin * 60000), after: new Date(partner.end_at) };
+}
+
+export interface AttachOption {
+  key: "before" | "after";
+  date: string;
+  time: string;
+  start: string;
+  end: string;
+  free: boolean;
+}
+
+export interface PartnerMeeting {
+  customerName: string;
+  agentName: string;
+  start: string;
+  end: string;
+  options: AttachOption[];
+}
+
+export async function partnerMeeting(assignment: Assignment): Promise<PartnerMeeting | null> {
+  const partner = assignment.partner;
+  if (!partner || new Date(partner.start_at).getTime() <= Date.now()) return null;
+  const settings = await loadSettings(assignment.query.profile);
+  const starts = attachStarts(partner, settings.durationMin);
+  const from = todayInJerusalem();
+  const windowEnd = addDays(from, settings.windowDays);
+  const last = toWall(starts.after).date;
+  const to = last > windowEnd ? last : windowEnd;
+  const [[agent], context] = await Promise.all([loadAgents(assignment.candidates, from, to), contextFor(assignment.query, from, to)]);
+  const options = (["before", "after"] as const).map((key): AttachOption => {
+    const start = starts[key];
+    const wall = toWall(start);
+    return {
+      key,
+      date: wall.date,
+      time: wall.time,
+      start: start.toISOString(),
+      end: new Date(start.getTime() + settings.durationMin * 60000).toISOString(),
+      free: verdictAt(agent, start, context, true) === null,
+    };
+  });
+  traceStep("attach options", { partnerBooking: partner.id, options: options.map(({ key, start, free }) => ({ key, start, free })) });
+  return { customerName: partner.customer_name, agentName: partner.agent_name, start: partner.start_at, end: partner.end_at, options };
+}
+
+function isAttachStart(assignment: Assignment, start: Date, durationMin: number): boolean {
+  if (!assignment.partner) return false;
+  const starts = attachStarts(assignment.partner, durationMin);
+  return start.getTime() === starts.before.getTime() || start.getTime() === starts.after.getTime();
 }
 
 export async function slotsForAssignment(assignment: Assignment): Promise<Record<string, string[]>> {
@@ -202,9 +254,11 @@ export async function createBooking(input: CreateInput): Promise<BookingRow> {
     const from = todayInJerusalem();
     const to = addDays(from, settings.windowDays);
     const [agents, context] = await Promise.all([loadAgents(candidates, from, to > date ? to : date), contextFor(assignment.query, from, to > date ? to : date)]);
-    const reasons = new Map(agents.map((agent) => [agent.email, verdictAt(agent, start, context)]));
+    const attach = isAttachStart(assignment, start, settings.durationMin);
+    const reasons = new Map(agents.map((agent) => [agent.email, verdictAt(agent, start, context, attach)]));
     traceStep("slot check", {
       start: start.toISOString(),
+      attach,
       free: candidates.filter((agent) => reasons.get(agent.email) === null).map((agent) => agent.name),
       notFree: candidates.filter((agent) => reasons.get(agent.email) !== null).map((agent) => ({ agent: agent.name, reason: reasons.get(agent.email) ?? "no_data" })),
     });

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { STAFF } from "@/lib/auth/types";
-import { resolveAssignment, validateLead } from "@/lib/booking/core";
+import { partnerMeeting, resolveAssignment, validateLead } from "@/lib/booking/core";
 import { leadNumber } from "@/lib/booking/schemas";
 import { route } from "@/lib/http/route";
 
@@ -13,5 +13,6 @@ export const POST = route({ roles: STAFF, schema, trace: "lead.check" }, async (
   return {
     lead: { name: lead.fullName, number: lead.number },
     spouse: { name: assignment.spouseLead!.fullName, number: assignment.spouseLead!.number },
+    partner: await partnerMeeting(assignment),
   };
 });

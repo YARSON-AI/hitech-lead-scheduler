@@ -129,8 +129,6 @@ export async function slotsForPool(roster: RosterAgent[], query: SlotQuery): Pro
   const from = todayInJerusalem();
   const to = addDays(from, settings.windowDays);
   const [agents, context] = await Promise.all([loadAgents(roster, from, to), contextFor(query, from, to)]);
-  const unreadable = agents.filter((agent) => !agent.readable).length;
-  console.log(JSON.stringify({ level: "info", at: "availability", pool: agents.length, unreadable }));
   const slots = publicSlots(unionSlots(agents, from, to, context));
   traceStep("slots", { from, to, agents: agents.length, unreadable: agents.filter((agent) => !agent.readable).map((agent) => agent.email), days: Object.keys(slots).length, times: Object.values(slots).flat().length });
   return slots;

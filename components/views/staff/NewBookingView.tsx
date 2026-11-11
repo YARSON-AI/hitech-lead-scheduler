@@ -33,11 +33,11 @@ export function NewBookingView({ v }: { v: VM }) {
               <Card padding="lg">
                 <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                   <SectionHeader title="פרטי הליד" description="הזן את פרטי הליד לפגישה" />
-                  <TextInput label="מספר ליד*" placeholder="הזן מספר ליד" inputMode="numeric" value={v.leadNum} onChange={v.onLeadNum} error={v.leadErr} />
+                  <TextInput label="מספר ליד*" placeholder="הזן מספר ליד" inputMode="numeric" value={v.leadNum} onChange={v.onLeadNum} onKeyDown={v.enterNext} error={v.leadErr} />
                   {v.newSpouse && (
                     <>
                       <div className="hti-slide-down">
-                        <TextInput label="מספר ליד בן/בת הזוג שכבר תואם*" placeholder="הזן מספר ליד בן/בת הזוג" value={v.spouseLead} onChange={v.onSpouseLead} />
+                        <TextInput label="מספר ליד בן/בת הזוג שכבר תואם*" placeholder="הזן מספר ליד בן/בת הזוג" autoFocus={true} value={v.spouseLead} onChange={v.onSpouseLead} onKeyDown={v.enterNext} />
                       </div>
                     </>
                   )}
@@ -47,7 +47,7 @@ export function NewBookingView({ v }: { v: VM }) {
                   {v.newInPerson && (
                     <>
                       <div className="hti-slide-down">
-                        <TextInput label="כתובת לפגישה*" placeholder="הזן כתובת מלאה" value={v.newAddress} onChange={v.onNewAddress} />
+                        <TextInput label="כתובת לפגישה*" placeholder="הזן כתובת מלאה" value={v.newAddress} onChange={v.onNewAddress} onKeyDown={v.enterNext} />
                       </div>
                     </>
                   )}
@@ -96,6 +96,8 @@ export function NewBookingView({ v }: { v: VM }) {
                       </Alert>
                     </>
                   )}
+                  {v.showPair && v.spPairBlock}
+                  {v.pairErr && <Alert {...v.alertProps} tone="error">{v.pairErr}</Alert>}
                   {!v.newSpouse && <RadioGroup options={v.assignOptions} value={v.newAssign} onChange={v.onNewAssign} />}
                   {v.newManual && (
                     <>

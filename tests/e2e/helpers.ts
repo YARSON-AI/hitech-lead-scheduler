@@ -14,6 +14,7 @@ assertSafeEnvironment({ NEXT_PUBLIC_SUPABASE_URL: url });
 
 export const PASSWORD = envValue("SEED_PASSWORD");
 export const D = "example.test";
+export const ORIGIN = process.env.E2E_BASE_URL ?? "http://localhost:3000";
 export const MANAGER = `manager@${D}`;
 export const COORDINATOR = `coordinator@${D}`;
 export const AGENT = `daniel@${D}`;
@@ -120,5 +121,5 @@ export function outbox(): { channel: string; event: string; payload: Record<stri
 }
 
 export async function postJson(page: Page, path: string, body: unknown) {
-  return page.request.post(path, { data: body, headers: { Origin: "http://localhost:3000" } });
+  return page.request.post(path, { data: body, headers: { Origin: ORIGIN } });
 }

@@ -92,7 +92,7 @@ export const stubN8n: N8n = {
       .select("agent_email")
       .eq("lead_id", leadId)
       .eq("status", "confirmed")
-      .order("start_at", { ascending: false })
+      .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
     return data ? { agentEmail: data.agent_email } : null;

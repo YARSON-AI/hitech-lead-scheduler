@@ -4,6 +4,7 @@
 import { Fragment } from "react";
 import { Badge, Button, Card, FieldLabel, SearchableSelect, Table, Tabs, TextInput } from "@/components/ds";
 import { css, type VM } from "@/components/views/vm";
+import { pressable } from "@/components/views/bits";
 
 export function BookingsView({ v }: { v: VM }) {
   void Fragment;
@@ -70,7 +71,7 @@ export function BookingsView({ v }: { v: VM }) {
           <div style={{ flexDirection: "column", gap: "12px" }} className="hti-cqc">
             {(v.bookingCards ?? []).map((b: VM, index: number) => (
               <Fragment key={b.key ?? b.id ?? index}>
-                <div className="hti-cardlink" onClick={b.go} style={{ background: "var(--surface-card)", borderRadius: "var(--radius-card)", boxShadow: "var(--shadow-lg)", padding: "16px", display: "flex", flexDirection: "column", gap: "12px", cursor: "pointer" }}>
+                <div className="hti-cardlink" onClick={b.go} {...pressable(b.go)} style={{ background: "var(--surface-card)", borderRadius: "var(--radius-card)", boxShadow: "var(--shadow-lg)", padding: "16px", display: "flex", flexDirection: "column", gap: "12px", cursor: "pointer" }}>
                   <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px" }}>
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", minWidth: "0" }}>
                       <span dir="ltr" style={{ display: "inline-block", whiteSpace: "nowrap", fontFamily: "var(--font-display)", fontWeight: "600", fontSize: "20px", color: "var(--text-primary)" }}>

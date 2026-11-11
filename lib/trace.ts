@@ -11,8 +11,7 @@ interface Trace {
   steps: Record<string, unknown>[];
 }
 
-const holder = globalThis as typeof globalThis & { __bookingTrace?: AsyncLocalStorage<Trace> };
-const store = (holder.__bookingTrace ??= new AsyncLocalStorage<Trace>());
+const store = new AsyncLocalStorage<Trace>();
 
 export function traceStep(step: string, data: Record<string, unknown> = {}): void {
   const trace = store.getStore();

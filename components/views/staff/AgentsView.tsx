@@ -4,6 +4,7 @@
 import { Fragment } from "react";
 import { Button, Card, SearchableSelect, Table, TextInput } from "@/components/ds";
 import { css, type VM } from "@/components/views/vm";
+import { pressable } from "@/components/views/bits";
 
 export function AgentsView({ v }: { v: VM }) {
   void Fragment;
@@ -44,7 +45,7 @@ export function AgentsView({ v }: { v: VM }) {
           <div style={{ flexDirection: "column", gap: "12px" }} className="hti-cqc">
             {(v.agentCards ?? []).map((a: VM, index: number) => (
               <Fragment key={a.key ?? a.id ?? index}>
-                <div className="hti-cardlink" onClick={a.go} style={{ background: "var(--surface-card)", borderRadius: "var(--radius-card)", boxShadow: "var(--shadow-lg)", padding: "16px", display: "flex", flexDirection: "column", gap: "12px", cursor: "pointer" }}>
+                <div className="hti-cardlink" onClick={a.go} {...pressable(a.go)} style={{ background: "var(--surface-card)", borderRadius: "var(--radius-card)", boxShadow: "var(--shadow-lg)", padding: "16px", display: "flex", flexDirection: "column", gap: "12px", cursor: "pointer" }}>
                   <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px" }}>
                     <div style={{ minWidth: "0" }}>
                       <div style={{ font: "var(--type-label)", color: "var(--text-primary)" }}>

@@ -203,6 +203,10 @@
 th[style*="cursor: pointer"]:hover { color: var(--color-primary-hover) !important }
 input + button[type="button"]:hover { color: var(--text-secondary) !important }
 tbody tr[style*="cursor: default"] { background: #fff !important }
+.hti-rc[aria-checked="false"][aria-disabled="false"]:hover { border-color: var(--teal-300) !important; background: var(--teal-50) !important }
+.hti-pchip[aria-pressed="false"]:not(:disabled):hover { border-color: var(--color-primary) !important; color: var(--color-primary-hover) !important }
+.hti :is(button, a, [tabindex]):focus-visible { outline: 2px solid var(--border-focus) !important; outline-offset: 2px }
+.hti tr[tabindex]:focus-visible { outline-offset: -2px }
 
 .hti{min-height:100vh;background:var(--bg-page-gradient);background-attachment:fixed}
 .hti-desk-only{display:flex}

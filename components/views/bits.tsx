@@ -75,3 +75,15 @@ export function QuietButton({
     </button>
   );
 }
+
+export function pressable(go: () => void) {
+  return {
+    tabIndex: 0,
+    onKeyDown: (event: { key: string; target: unknown; currentTarget: unknown; preventDefault: () => void }) => {
+      if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) {
+        event.preventDefault();
+        go();
+      }
+    },
+  };
+}

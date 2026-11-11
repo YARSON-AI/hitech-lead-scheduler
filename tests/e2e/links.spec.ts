@@ -1,5 +1,5 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
-import { admin, AGENT, COORDINATOR, D, login, OTHER_AGENT, outbox, postJson } from "./helpers";
+import { admin, AGENT, COORDINATOR, D, login, OTHER_AGENT, outbox, postJson, ORIGIN } from "./helpers";
 
 test.describe.configure({ mode: "serial" });
 
@@ -80,7 +80,7 @@ test("used, expired, revoked and unknown tokens return the same response", async
   expect((await postJson(page, `/api/app/links/${revoked.id}/revoke`, {})).status()).toBe(200);
   const expired = await create(page, { leadNumber: "10010", mode: "manual", agentId: "recAgent002" });
   await admin().from("booking_links").update({ expires_at: new Date(Date.now() - 1000).toISOString() }).eq("id", expired.id);
-  const headers = { Origin: "http://localhost:3000" };
+  const headers = { Origin: ORIGIN };
   const view = async (token: string) => (await (await request.post("/api/app/public/links/view", { data: { token }, headers })).text());
   const texts = await Promise.all([tokenOf(revoked.url), tokenOf(expired.url), "unknown-token-value-0000000000000000"].map(view));
   expect(new Set(texts).size).toBe(1);
@@ -92,7 +92,7 @@ test("a modified request cannot change the agent, the lead or the rules", async 
   await login(page, COORDINATOR);
   const link = await create(page, { leadNumber: "10011", mode: "manual", agentId: "recAgent002" });
   const token = tokenOf(link.url);
-  const headers = { Origin: "http://localhost:3000" };
+  const headers = { Origin: ORIGIN };
   for (const extra of [{ agentEmail: `daniel@${D}` }, { leadNumber: "10001" }, { forced: true }]) {
     const response = await request.post("/api/app/public/links/book", { data: { token, date: "2031-01-05", time: "10:00", ...extra }, headers });
     expect(response.status()).toBe(400);
@@ -109,7 +109,7 @@ test("an automatic link assigns the host at confirm time", async ({ page, reques
   await login(page, COORDINATOR);
   const link = await create(page, { leadNumber: "10012", mode: "auto" });
   const token = tokenOf(link.url);
-  const headers = { Origin: "http://localhost:3000" };
+  const headers = { Origin: ORIGIN };
   const view = await (await request.post("/api/app/public/links/view", { data: { token }, headers })).json();
   expect(view.agentName).toBeNull();
   const { slots } = await (await request.post("/api/app/public/links/slots", { data: { token }, headers })).json();
@@ -128,7 +128,7 @@ test("a failed handoff leaves the link open", async ({ page, request }) => {
   await login(page, COORDINATOR);
   const link = await create(page, { leadNumber: "10013", mode: "manual", agentId: "recAgent002" });
   const token = tokenOf(link.url);
-  const headers = { Origin: "http://localhost:3000" };
+  const headers = { Origin: ORIGIN };
   const { slots } = await (await request.post("/api/app/public/links/slots", { data: { token }, headers })).json();
   const date = Object.keys(slots).sort()[0];
   await postJson(page, "/api/app/public/dev-stub", { failNext: "booking.created" });

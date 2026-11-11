@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { admin, AGENT, COORDINATOR, D, login, loginManager, OTHER_AGENT, outbox, postJson } from "./helpers";
+import { admin, AGENT, COORDINATOR, D, login, loginManager, OTHER_AGENT, outbox, postJson, ORIGIN } from "./helpers";
 
 test.describe.configure({ mode: "serial" });
 
@@ -114,7 +114,7 @@ test("an agent's hours and overrides change the slots they offer", async ({ page
   await coordinator.clearCookies();
 
   await login(page, AGENT);
-  const removed = await page.request.delete(`/api/app/schedule/overrides/${override!.id}`, { headers: { Origin: "http://localhost:3000" } });
+  const removed = await page.request.delete(`/api/app/schedule/overrides/${override!.id}`, { headers: { Origin: ORIGIN } });
   expect(removed.status()).toBe(200);
 });
 

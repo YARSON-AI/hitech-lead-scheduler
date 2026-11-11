@@ -205,8 +205,9 @@ export function publicSlots(union: SlotUnion): Record<string, string[]> {
   return out;
 }
 
-export function verdictAt(agent: AgentAvailability, start: Date, context: EngineContext): Reason | "not_a_slot" | null {
-  const verdict = evaluateDay(agent, toWall(start).date, context).find((row) => row.start === start.getTime());
+export function verdictAt(agent: AgentAvailability, start: Date, context: EngineContext, anyMinute = false): Reason | "not_a_slot" | null {
+  const day = anyMinute ? { ...context, settings: { ...context.settings, intervalMin: 1 } } : context;
+  const verdict = evaluateDay(agent, toWall(start).date, day).find((row) => row.start === start.getTime());
   return verdict ? verdict.reason : "not_a_slot";
 }
 

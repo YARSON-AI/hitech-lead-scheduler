@@ -205,7 +205,16 @@ function Card({
     subtle: "var(--surface-subtle)",
     brand: "var(--color-primary-soft)"
   }[tone];
-  return /*#__PURE__*/React.createElement("div", _extends({
+  const keys = rest.onClick && rest.tabIndex === undefined ? {
+    tabIndex: 0,
+    onKeyDown: e => {
+      if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
+        e.preventDefault();
+        rest.onClick(e);
+      }
+    }
+  } : {};
+  return /*#__PURE__*/React.createElement("div", _extends({}, keys, {
     style: {
       background: bg,
       borderRadius: tone === "white" ? "var(--radius-card)" : "var(--radius-control)",
@@ -1059,6 +1068,13 @@ function Row({
     onMouseEnter: () => setH(true),
     onMouseLeave: () => setH(false),
     onClick: onClick,
+    tabIndex: onClick ? 0 : undefined,
+    onKeyDown: onClick ? e => {
+      if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
+        e.preventDefault();
+        onClick(e);
+      }
+    } : undefined,
     style: {
       background: selected ? "var(--color-primary-soft)" : h ? "var(--surface-subtle)" : "#fff",
       cursor: onClick ? "pointer" : "default",
