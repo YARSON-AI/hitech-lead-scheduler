@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import type { CSSProperties, ReactNode } from "react";
 import { Button, Icon, PageHeader } from "@/components/ds";
 import { api } from "@/lib/client/api";
+import { NEW_BOOKING_EVENT } from "@/lib/client/hooks";
 import { PhoneNav } from "./PhoneNav";
 import { ToastProvider } from "./ToastProvider";
 
@@ -40,6 +41,11 @@ export function StaffShell({
 }) {
   const path = usePathname();
   const router = useRouter();
+  const startNew = (event?: { preventDefault: () => void }) => {
+    if (path !== "/") return router.push("/");
+    event?.preventDefault();
+    window.dispatchEvent(new Event(NEW_BOOKING_EVENT));
+  };
   const items = NAV.filter((item) => isManager || !item.managerOnly).map((item) => ({
     ...item,
     count: item.key === "alerts" ? alertCount : 0,
@@ -73,7 +79,7 @@ export function StaffShell({
             className="hti-desk-only"
             style={{ width: 256, flex: "none", borderInlineStart: "1px solid var(--border-subtle)", background: "var(--surface-subtle)", padding: "20px 16px", flexDirection: "column", gap: 6 }}
           >
-            <Button size="md" fullWidth iconStart="plus" onClick={() => router.push("/")} style={{ marginBottom: 8 }}>
+            <Button size="md" fullWidth iconStart="plus" onClick={() => startNew()} style={{ marginBottom: 8 }}>
               תיאום פגישה חדשה
             </Button>
             {items.map((item) => (
@@ -107,7 +113,7 @@ export function StaffShell({
             <div className="hti-phone-only">
               <PhoneNav
                 items={[
-                  { key: "new", href: "/", label: "תיאום חדש", icon: "plus", on: path === "/", primary: true },
+                  { key: "new", href: "/", label: "תיאום חדש", icon: "plus", on: path === "/", primary: true, onClick: startNew },
                   ...items.map((item) => ({ key: item.key, href: item.href, label: item.label, icon: item.icon, count: item.count, on: item.on })),
                 ]}
               />

@@ -49,10 +49,12 @@ function MiniButton({ paths, label, onClick, tone, disabled }: { paths: string; 
 export function TeamsLink({ url, state, variant }: { url: string | null; state: TeamsState; variant: "compact" | "join" | "inline" | "full" }) {
   const { copied, copy } = useCopy();
   const done = copied === "teams";
-  const open = () => {
+  const open = (event?: MouseEvent) => {
+    event?.stopPropagation();
     if (url) window.open(url, "_blank", "noopener");
   };
-  const doCopy = () => {
+  const doCopy = (event?: MouseEvent) => {
+    event?.stopPropagation();
     if (url) copy("teams", url);
   };
 

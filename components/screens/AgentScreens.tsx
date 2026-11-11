@@ -24,11 +24,17 @@ import { overrideRows, useHoursEditor, useOverrideEditor, type HolidayRow, type 
 const monthName = (iso: string) => new Intl.DateTimeFormat("he-IL", { timeZone: "Asia/Jerusalem", month: "long" }).format(new Date(iso));
 const dayNumber = (iso: string) => new Intl.DateTimeFormat("he-IL", { timeZone: "Asia/Jerusalem", day: "numeric" }).format(new Date(iso));
 
-export function AgentMeetingsScreen({ meetings }: { meetings: BookingRow[] }) {
+const CANCELLED_BY: Record<string, string> = { customer: "לקוח/ה", agent: "סוכן/ת", coordinator: "מתאמת" };
+const cancelledWhen = (row: BookingRow) => (row.cancelled_at ? `${fmtDate(row.cancelled_at)} ${fmtTime(row.cancelled_at)}` : "—");
+
+export function AgentMeetingsScreen({ meetings, cancelled, initialTab }: { meetings: BookingRow[]; cancelled: BookingRow[]; initialTab: "upcoming" | "cancelled" }) {
   const router = useRouter();
-  const agMeetings = meetings.map((row) => {
+  const [tab, setTab] = useState(initialTab);
+  const showCancelled = tab === "cancelled";
+  const agMeetings = (showCancelled ? cancelled : meetings).map((row) => {
     const onsite = !!row.in_person_address;
-    const join = onsite ? null : <TeamsLink url={row.teams_join_url} state={teamsState(row)} variant="join" />;
+    const join = onsite || showCancelled ? null : <TeamsLink url={row.teams_join_url} state={teamsState(row)} variant="join" />;
+    const cxLink = showCancelled && !onsite ? <TeamsLink url={row.teams_join_url} state="cancelled" variant="inline" /> : null;
     return {
       id: row.id,
       go: () => router.push(`/agent/meetings/${row.id}`),
@@ -47,6 +53,12 @@ export function AgentMeetingsScreen({ meetings }: { meetings: BookingRow[] }) {
       topic: row.interest_name,
       join,
       hasJoin: !!join,
+      cx: showCancelled,
+      cxBy: CANCELLED_BY[row.cancelled_by ?? ""] ?? null,
+      cxWhen: row.cancelled_at ? cancelledWhen(row) : null,
+      cxReason: row.cancel_reason || null,
+      cxLink,
+      cxHasLink: !!cxLink,
     };
   });
   return (
@@ -56,9 +68,19 @@ export function AgentMeetingsScreen({ meetings }: { meetings: BookingRow[] }) {
           agMeetings,
           agSub: meetings.length ? `${meetings.length} פגישות קרובות` : "אין פגישות קרובות",
           rowCardProps: { style: { cursor: "pointer", overflow: "hidden" } },
+          agMtTabs: [
+            { value: "upcoming", label: "עתידיות", count: meetings.length },
+            { value: "cancelled", label: "מבוטלות", count: cancelled.length },
+          ],
+          agMtTab: tab,
+          onAgMtTab: (value: "upcoming" | "cancelled") => {
+            setTab(value);
+            router.replace(value === "cancelled" ? "/agent?tab=cancelled" : "/agent", { scroll: false });
+          },
+          agCxEmpty: showCancelled && cancelled.length === 0,
         }}
       />
-      {meetings.length === 0 && (
+      {!showCancelled && meetings.length === 0 && (
         <Card padding="lg">
           <EmptyState icon="calendar" title="אין פגישות קרובות" description="פגישות חדשות שייקבעו לך יופיעו כאן." />
         </Card>
@@ -94,7 +116,7 @@ export function AgentMeetingDetailScreen({ booking }: { booking: BookingRow }) {
 
   const v = {
     ...common,
-    goAgMeetings: () => router.push("/agent"),
+    goAgMeetings: () => router.push(active ? "/agent" : "/agent?tab=cancelled"),
     goAgReschedule: () => router.push(`/agent/meetings/${booking.id}/reschedule`),
     openAgCancel: () => setOpen(true),
     canAct: active,
@@ -110,6 +132,10 @@ export function AgentMeetingDetailScreen({ booking }: { booking: BookingRow }) {
     dKind: onsite ? `פגישה פרונטלית ● ${booking.in_person_address}` : "פגישה מרחוק",
     dTopic: booking.interest_name ?? "—",
     teamsFull: onsite ? null : <TeamsLink url={booking.teams_join_url} state={teamsState(booking)} variant="full" />,
+    agDCx: !active,
+    agDCxBy: CANCELLED_BY[booking.cancelled_by ?? ""] ?? "—",
+    agDCxWhen: cancelledWhen(booking),
+    agDCxReason: booking.cancel_reason || "—",
     agCancelOpen: open,
     closeAgCancel: () => setOpen(false),
     cancelDesc: `${whenText(booking)} ● ${booking.customer_name}`,

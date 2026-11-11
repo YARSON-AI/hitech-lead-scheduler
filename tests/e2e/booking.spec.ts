@@ -153,6 +153,14 @@ test("the lead form works from the keyboard", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "הקצאת סוכן" })).toBeVisible({ timeout: 20000 });
 });
 
+test("the new-booking button starts over from the confirmation screen", async ({ page }) => {
+  await admin().from("bookings").update({ status: "cancelled" }).eq("lead_number", "10014").eq("status", "confirmed");
+  await bookThroughScreen(page, "10014");
+  await page.locator("nav").getByRole("button", { name: "תיאום פגישה חדשה" }).click();
+  await expect(page.locator("input").first()).toHaveValue("");
+  await expect(page.getByRole("button", { name: "המשך" })).toBeVisible();
+});
+
 test("a failed handoff leaves no meeting behind", async ({ page }) => {
   const body = { mode: "manual", agentId: AGENT_ID, leadNumber: "10019" };
   await admin().from("bookings").update({ status: "cancelled" }).eq("lead_number", "10019").eq("status", "confirmed");

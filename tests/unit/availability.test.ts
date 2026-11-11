@@ -65,6 +65,15 @@ describe("availability rules", () => {
     expect(reason(a, "11:00")).toBeNull();
   });
 
+  it("keeps the before buffer before each event and the after buffer after it", () => {
+    const uneven = context({ settings: { ...settings, bufferBeforeMin: 15, bufferAfterMin: 60 } });
+    const a = agent({ busy: [busy("10:00", "10:30")] });
+    expect(reason(a, "09:00", uneven)).toBeNull();
+    expect(reason(a, "09:30", uneven)).toBe("buffer");
+    expect(reason(a, "11:00", uneven)).toBe("buffer");
+    expect(reason(a, "11:30", uneven)).toBeNull();
+  });
+
   it("respects notice and booking window", () => {
     const soon = context({ now: fromWall(SUNDAY, "06:00") });
     expect(reason(agent(), "09:30", soon)).toBe("notice");

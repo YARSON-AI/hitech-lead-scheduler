@@ -154,7 +154,7 @@ export function evaluateDay(agent: AgentAvailability, date: string, context: Eng
       if (busy.some((block) => overlaps(start, end, block.start, block.end))) return "busy";
       const padded = busy.some((block) => {
         if (block.id && context.unpaddedBlockIds?.has(block.id)) return false;
-        return overlaps(start, end, block.start - settings.bufferAfterMin * MINUTE, block.end + settings.bufferBeforeMin * MINUTE);
+        return overlaps(start, end, block.start - settings.bufferBeforeMin * MINUTE, block.end + settings.bufferAfterMin * MINUTE);
       });
       if (padded) return "buffer";
       if (start < earliest) return "notice";

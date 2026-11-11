@@ -8,7 +8,7 @@ import { SpousePairBlock } from "@/components/views/staff/SpousePairBlock";
 import { TeamsLink } from "@/components/views/TeamsLink";
 import { api, ApiFailure } from "@/lib/client/api";
 import { fmtDate, fmtDow, fmtRange, isoDate } from "@/lib/client/format";
-import { useCommonVM } from "@/lib/client/hooks";
+import { NEW_BOOKING_EVENT, useCommonVM } from "@/lib/client/hooks";
 import { useSlotPicker } from "@/lib/client/useSlotPicker";
 
 type Change = { target: { value: string } };
@@ -203,6 +203,11 @@ export function NewBookingScreen({ specializations }: { specializations: Option[
     setPairSlot("");
     setPairErr("");
   }
+
+  useEffect(() => {
+    window.addEventListener(NEW_BOOKING_EVENT, restart);
+    return () => window.removeEventListener(NEW_BOOKING_EVENT, restart);
+  });
 
   const manualName = agents.find((option) => option.value === agent)?.label;
   const newSummary = done

@@ -4,6 +4,8 @@ import { useCallback, useRef, useState, useSyncExternalStore } from "react";
 
 const QUERY = "(max-width: 767px)";
 
+export const NEW_BOOKING_EVENT = "hti:new-booking";
+
 function subscribe(listener: () => void) {
   const media = window.matchMedia(QUERY);
   media.addEventListener("change", listener);

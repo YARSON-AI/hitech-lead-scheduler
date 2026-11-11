@@ -43,7 +43,6 @@ const KIND_FOR: Partial<Record<Reason, BlockKind>> = {
   outside_hours: "off",
   override: "blocked",
   holiday: "holiday",
-  buffer: "buffer",
   notice: "notice",
   window: "notice",
 };
@@ -72,13 +71,12 @@ export async function agentCalendar(agentId: string, from: string, days: number)
   const out: CalendarDay[] = [];
 
   for (let date = from; date <= to; date = addDays(date, 1)) {
-    const verdicts = evaluateDay(loaded, date, context);
-    const base = evaluateDay({ ...loaded, busy: [] }, date, context);
+    const verdicts = evaluateDay({ ...loaded, busy: [] }, date, context);
     const holiday = holidayRows.data?.find((row) => row.date === date && row.blocks);
     const { blocks: overrideBlocks } = dayWindows(loaded, date);
     const wholeBlock = overrideBlocks.some(([start, end]) => start === 0 && end === 1440);
     const note = loaded.overrides.find((row) => row.date === date && row.kind === "block" && !row.startTime);
-    const quotaFull = base.some((verdict) => verdict.reason === "quota");
+    const quotaFull = verdicts.some((verdict) => verdict.reason === "quota");
     const allDay: CalendarDay["allDay"] = holiday && !holiday.blocked_from
       ? { kind: "holiday", label: holiday.name }
       : wholeBlock
@@ -106,10 +104,9 @@ export async function agentCalendar(agentId: string, from: string, days: number)
         });
       }
     };
-    verdicts.forEach((verdict, index) => {
+    verdicts.forEach((verdict) => {
       const minutes = wallMinutes(verdict.start);
-      const underlying = base[index].reason;
-      const reason: Reason | null = underlying && underlying !== "quota" ? underlying : verdict.reason === "busy" || verdict.reason === "buffer" ? "buffer" : null;
+      const reason: Reason | null = verdict.reason === "quota" ? null : verdict.reason;
       const active = run as { reason: Reason; start: number; end: number } | null;
       if (reason && active?.reason === reason && active.end === minutes) {
         active.end = minutes + step;
@@ -121,6 +118,19 @@ export async function agentCalendar(agentId: string, from: string, days: number)
     flush();
     const last = verdicts[verdicts.length - 1];
     if (last && wallMinutes(last.start) + step < 1440 && blocks.length && blocks[blocks.length - 1].kind === "off") blocks[blocks.length - 1].end = 1440;
+
+    const { bufferBeforeMin, bufferAfterMin } = context.settings;
+    const zones = loaded.busy
+      .filter((busy) => toWall(new Date(busy.start)).date === date)
+      .map((busy) => [Math.max(0, wallMinutes(busy.start) - bufferBeforeMin), Math.min(1440, Math.max(wallMinutes(busy.start) + 15, wallMinutes(busy.end)) + bufferAfterMin)])
+      .sort((a, b) => a[0] - b[0]);
+    const merged: number[][] = [];
+    for (const zone of zones) {
+      const previous = merged[merged.length - 1];
+      if (previous && zone[0] <= previous[1]) previous[1] = Math.max(previous[1], zone[1]);
+      else merged.push([...zone]);
+    }
+    for (const [start, end] of merged) blocks.push({ kind: "buffer", start, end, label: "", time: "", title: REASON_TEXT.buffer });
 
     for (const busy of loaded.busy) {
       if (toWall(new Date(busy.start)).date !== date) continue;

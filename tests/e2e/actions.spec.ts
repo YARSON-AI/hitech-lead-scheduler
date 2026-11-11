@@ -94,6 +94,26 @@ test("an agent acts only on their own meetings, without force", async ({ page })
   expect((await postJson(page, `/api/app/bookings/${own.id}/reschedule`, { date: "2031-01-05", time: "10:00", forced: false })).status()).toBe(409);
 });
 
+test("an agent sees their cancelled meetings read-only", async ({ page }) => {
+  await login(page, COORDINATOR);
+  const id = await bookManual(page, "10010", "recAgent001");
+  expect((await postJson(page, `/api/app/bookings/${id}/cancel`, { cancelledBy: "customer", reason: "בדיקת ביטול" })).status()).toBe(200);
+  await page.context().clearCookies();
+  await login(page, AGENT);
+  await page.goto("/agent");
+  await page.getByRole("tab", { name: /מבוטלות/ }).click();
+  await expect(page).toHaveURL(/tab=cancelled/);
+  const card = page.getByText("בדיקת ביטול").first();
+  await expect(card).toBeVisible();
+  await card.click();
+  await page.waitForURL(`**/agent/meetings/${id}`);
+  await expect(page.getByText("סיבת הביטול")).toBeVisible();
+  await expect(page.getByRole("button", { name: "ביטול פגישה" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "שינוי מועד" })).toHaveCount(0);
+  await page.getByRole("button", { name: "חזרה לפגישות שלי" }).click();
+  await expect(page).toHaveURL(/tab=cancelled/);
+});
+
 test("an agent's hours and overrides change the slots they offer", async ({ page }) => {
   await login(page, COORDINATOR);
   const body = { mode: "manual", agentId: "recAgent001", leadNumber: "10005" };

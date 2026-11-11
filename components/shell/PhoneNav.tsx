@@ -12,6 +12,7 @@ export interface PhoneNavItem {
   count?: number;
   on: boolean;
   primary?: boolean;
+  onClick?: (event: { preventDefault: () => void }) => void;
 }
 
 const fade = (width: number, blur: number, stop: string): CSSProperties => {
@@ -71,6 +72,7 @@ export function PhoneNav({ items }: { items: PhoneNavItem[] }) {
             key={item.key}
             href={item.href}
             data-navkey={item.key}
+            onClick={item.onClick}
             className={item.primary ? "hti-pill-primary" : "hti-pill"}
             data-on={item.on ? "1" : "0"}
             style={item.primary ? { ...itemStyle(true), fontFamily: "var(--font-display)", fontWeight: 600 } : itemStyle(item.on)}

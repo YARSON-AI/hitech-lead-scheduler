@@ -4,14 +4,19 @@ import { AGENT } from "@/lib/auth/types";
 import type { BookingRow } from "@/lib/booking/types";
 import { serverClient } from "@/lib/supabase/server";
 
-export default async function AgentMeetingsPage() {
+export default async function AgentMeetingsPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
   await requirePage(AGENT);
+  const { tab } = await searchParams;
   const supabase = await serverClient();
-  const { data } = await supabase
-    .from("bookings")
-    .select("*")
-    .eq("status", "confirmed")
-    .gte("end_at", new Date().toISOString())
-    .order("start_at");
-  return <AgentMeetingsScreen meetings={(data ?? []) as BookingRow[]} />;
+  const [{ data }, { data: cancelled }] = await Promise.all([
+    supabase.from("bookings").select("*").eq("status", "confirmed").gte("end_at", new Date().toISOString()).order("start_at"),
+    supabase.from("bookings").select("*").eq("status", "cancelled").order("cancelled_at", { ascending: false, nullsFirst: false }),
+  ]);
+  return (
+    <AgentMeetingsScreen
+      meetings={(data ?? []) as BookingRow[]}
+      cancelled={(cancelled ?? []) as BookingRow[]}
+      initialTab={tab === "cancelled" ? "cancelled" : "upcoming"}
+    />
+  );
 }

@@ -2,7 +2,7 @@
 
  
 import { Fragment } from "react";
-import { Card, Icon } from "@/components/ds";
+import { Badge, Card, EmptyState, Icon, Tabs } from "@/components/ds";
 import { css, type VM } from "@/components/views/vm";
 
 export function AgentMeetingsView({ v }: { v: VM }) {
@@ -19,6 +19,14 @@ export function AgentMeetingsView({ v }: { v: VM }) {
             {v.agSub}
           </p>
         </div>
+        <div style={{ display: "flex" }}>
+          <Tabs variant="pills" tabs={v.agMtTabs} value={v.agMtTab} onChange={v.onAgMtTab} />
+        </div>
+        {v.agCxEmpty && (
+          <Card padding="lg">
+            <EmptyState icon="calendar" title="אין פגישות מבוטלות" description="פגישות שבוטלו יופיעו כאן." />
+          </Card>
+        )}
         {(v.agMeetings ?? []).map((m: VM, index: number) => (
           <Fragment key={m.key ?? m.id ?? index}>
             <Card padding="none" onClick={m.go} {...v.rowCardProps}>
@@ -52,6 +60,11 @@ export function AgentMeetingsView({ v }: { v: VM }) {
                         </span>
                       </>
                     )}
+                    {m.cx && (
+                      <Badge tone="error" icon="x" size="sm">
+                        בוטלה
+                      </Badge>
+                    )}
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
                     <span style={{ display: "inline-flex", alignItems: "center", gap: "5px", height: "26px", padding: "0 10px", borderRadius: "var(--radius-pill)", background: `${m.kindBg}`, color: `${m.kindColor}`, font: "var(--type-caption)", whiteSpace: "nowrap" }}>
@@ -74,6 +87,28 @@ export function AgentMeetingsView({ v }: { v: VM }) {
                       {m.topic}
                     </span>
                   </div>
+                  {m.cx && (m.cxBy || m.cxWhen || m.cxReason) && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "4px", paddingTop: "10px", borderTop: "1px solid var(--border-subtle)" }}>
+                      {(m.cxBy || m.cxWhen) && (
+                        <div style={{ font: "var(--type-body-sm)", color: "var(--text-secondary)" }}>
+                          {m.cxBy && (
+                            <>
+                              {"בוטלה ע״י "}
+                              <span style={{ fontWeight: "500", color: "var(--text-primary)" }}>{m.cxBy}</span>
+                            </>
+                          )}
+                          {m.cxBy && m.cxWhen && " ● "}
+                          {m.cxWhen && <span dir="ltr">{m.cxWhen}</span>}
+                        </div>
+                      )}
+                      {m.cxReason && (
+                        <div style={{ font: "var(--type-body-sm)", color: "var(--text-secondary)", textWrap: "pretty" }}>
+                          {`סיבה: ${m.cxReason}`}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {m.cxHasLink && <div style={{ display: "flex" }}>{m.cxLink}</div>}
                   {m.hasJoin && (
                     <>
                       <div style={{ display: "flex" }}>

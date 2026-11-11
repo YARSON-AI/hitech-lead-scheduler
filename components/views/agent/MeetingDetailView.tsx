@@ -40,21 +40,28 @@ export function AgentMeetingDetailView({ v }: { v: VM }) {
               <SummaryItem label="סוג פגישה" value={v.dKind} />
               <SummaryItem label="סוג ליד" value={v.dTopic} last={true} />
             </Card>
-            <div>
-              {v.teamsFull}
-            </div>
-            <div style={{ display: "flex", gap: "12px", flexWrap: "nowrap" }}>
-              <div style={{ flex: "1 1 0", minWidth: "0", display: "flex" }}>
-                {v.canAct && <Button size="lg" fullWidth={true} iconStart="calendar" onClick={v.goAgReschedule}>
-                  שינוי מועד
-                </Button>}
+            {v.agDCx && (
+              <Card tone="subtle" padding="sm" style={css(v.summaryBox)}>
+                <SummaryItem label="בוטלה ע״י" value={v.agDCxBy} />
+                <SummaryItem label="מועד הביטול" value={v.agDCxWhen} ltr={true} />
+                <SummaryItem label="סיבת הביטול" value={v.agDCxReason} last={true} />
+              </Card>
+            )}
+            {v.teamsFull && <div>{v.teamsFull}</div>}
+            {v.canAct && (
+              <div style={{ display: "flex", gap: "12px", flexWrap: "nowrap" }}>
+                <div style={{ flex: "1 1 0", minWidth: "0", display: "flex" }}>
+                  <Button size="lg" fullWidth={true} iconStart="calendar" onClick={v.goAgReschedule}>
+                    שינוי מועד
+                  </Button>
+                </div>
+                <div style={{ flex: "1 1 0", minWidth: "0", display: "flex" }}>
+                  <Button variant="destructive" size="lg" fullWidth={true} iconStart="x" onClick={v.openAgCancel}>
+                    ביטול פגישה
+                  </Button>
+                </div>
               </div>
-              <div style={{ flex: "1 1 0", minWidth: "0", display: "flex" }}>
-                {v.canAct && <Button variant="destructive" size="lg" fullWidth={true} iconStart="x" onClick={v.openAgCancel}>
-                  ביטול פגישה
-                </Button>}
-              </div>
-            </div>
+            )}
           </div>
         </Card>
       </div>
