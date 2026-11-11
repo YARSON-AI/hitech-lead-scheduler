@@ -11,6 +11,6 @@ const schema = z.strictObject({
   specialization: z.string().max(100).optional(),
 });
 
-export const POST = route({ roles: ["agent", "coordinator", "manager"], schema }, async ({ actor, body, request }) => {
+export const POST = route({ roles: ["agent", "coordinator", "manager"], schema, trace: "link.create" }, async ({ actor, body, request }) => {
   return createLink(actor, body, request.nextUrl.origin);
 });

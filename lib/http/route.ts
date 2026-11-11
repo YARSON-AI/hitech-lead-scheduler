@@ -4,6 +4,7 @@ import type { z } from "zod";
 import { currentActor } from "@/lib/auth/actor";
 import type { Actor, Role } from "@/lib/auth/types";
 import { adminClient } from "@/lib/supabase/admin";
+import { withTrace } from "@/lib/trace";
 
 export class ApiError extends Error {
   constructor(
@@ -76,7 +77,7 @@ function isMutation(request: NextRequest): boolean {
 }
 
 export function route<T extends z.ZodType = z.ZodUndefined>(
-  options: { roles: Role[]; schema?: T; allowAal1?: boolean },
+  options: { roles: Role[]; schema?: T; allowAal1?: boolean; trace?: string },
   handler: (context: Context<z.infer<T>, Actor>) => Promise<unknown>,
 ) {
   return async (request: NextRequest, segment: { params?: Promise<Params> }) => {
@@ -89,13 +90,9 @@ export function route<T extends z.ZodType = z.ZodUndefined>(
         throw new ApiError(403, "second_step_required", "נדרש אימות דו-שלבי");
       }
       const body = await parse(request, options.schema);
-      const result = await handler({
-        actor,
-        body,
-        params: (await segment.params) ?? {},
-        query: request.nextUrl.searchParams,
-        request,
-      });
+      const params = (await segment.params) ?? {};
+      const run = () => handler({ actor, body, params, query: request.nextUrl.searchParams, request });
+      const result = options.trace ? await withTrace(options.trace, actor.role, run) : await run();
       return result instanceof NextResponse ? result : NextResponse.json(result ?? { ok: true });
     } catch (error) {
       return fail(error);
@@ -104,20 +101,16 @@ export function route<T extends z.ZodType = z.ZodUndefined>(
 }
 
 export function publicRoute<T extends z.ZodType = z.ZodUndefined>(
-  options: { schema?: T },
+  options: { schema?: T; trace?: string },
   handler: (context: Context<z.infer<T>, null>) => Promise<unknown>,
 ) {
   return async (request: NextRequest, segment: { params?: Promise<Params> }) => {
     try {
       if (isMutation(request)) assertSameOrigin(request);
       const body = await parse(request, options.schema);
-      const result = await handler({
-        actor: null,
-        body,
-        params: (await segment.params) ?? {},
-        query: request.nextUrl.searchParams,
-        request,
-      });
+      const params = (await segment.params) ?? {};
+      const run = () => handler({ actor: null, body, params, query: request.nextUrl.searchParams, request });
+      const result = options.trace ? await withTrace(options.trace, "customer_link", run) : await run();
       return result instanceof NextResponse ? result : NextResponse.json(result ?? { ok: true });
     } catch (error) {
       return fail(error);

@@ -13,7 +13,7 @@ const schema = z.strictObject({
   forced: z.boolean(),
 });
 
-export const POST = route({ roles: STAFF, schema }, async ({ actor, body }) => {
+export const POST = route({ roles: STAFF, schema, trace: "booking.create" }, async ({ actor, body }) => {
   if (!(await hitRateLimit(`booking:${actor.id}`, 60, 60))) throw new ApiError(429, "rate_limited", "יותר מדי בקשות. נסה/י שוב בעוד דקה.");
   if (body.forced && body.mode !== "manual") throw new ApiError(400, "force_needs_agent", "קביעה כפויה דורשת בחירת סוכן/ת");
   const lead = await validateLead(body.leadNumber);

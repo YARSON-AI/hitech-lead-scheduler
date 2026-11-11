@@ -1,4 +1,5 @@
 import "server-only";
+import { traceStep } from "@/lib/trace";
 import { freeSlots, publicSlots, unionSlots, type AgentAvailability, type BusyBlock, type EngineContext, type Holiday, type MeetingSettings, type WeeklyHours, type DateOverride } from "@/lib/engine/availability";
 import { addDays, fromWall, todayInJerusalem } from "@/lib/engine/time";
 import type { RosterAgent } from "@/lib/integrations/airtable/types";
@@ -130,7 +131,9 @@ export async function slotsForPool(roster: RosterAgent[], query: SlotQuery): Pro
   const [agents, context] = await Promise.all([loadAgents(roster, from, to), contextFor(query, from, to)]);
   const unreadable = agents.filter((agent) => !agent.readable).length;
   console.log(JSON.stringify({ level: "info", at: "availability", pool: agents.length, unreadable }));
-  return publicSlots(unionSlots(agents, from, to, context));
+  const slots = publicSlots(unionSlots(agents, from, to, context));
+  traceStep("slots", { from, to, agents: agents.length, unreadable: agents.filter((agent) => !agent.readable).map((agent) => agent.email), days: Object.keys(slots).length, times: Object.values(slots).flat().length });
+  return slots;
 }
 
 export async function agentFreeSlots(agent: RosterAgent, query: SlotQuery): Promise<Record<string, string[]>> {
@@ -140,5 +143,6 @@ export async function agentFreeSlots(agent: RosterAgent, query: SlotQuery): Prom
   const [[loaded], context] = await Promise.all([loadAgents([agent], from, to), contextFor(query, from, to)]);
   const out: Record<string, string[]> = {};
   for (const slot of freeSlots(loaded, from, to, context)) (out[slot.date] ??= []).push(slot.time);
+  traceStep("slots", { from, to, agent: agent.name, readable: loaded.readable, days: Object.keys(out).length, times: Object.values(out).flat().length });
   return out;
 }

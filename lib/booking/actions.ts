@@ -1,11 +1,12 @@
 import "server-only";
 import type { Actor } from "@/lib/auth/types";
 import { addDays, toWall, todayInJerusalem } from "@/lib/engine/time";
-import { isFree } from "@/lib/engine/availability";
+import { verdictAt } from "@/lib/engine/availability";
 import { ApiError, forbidden, notFound } from "@/lib/http/route";
 import { airtable, type RosterAgent } from "@/lib/integrations/airtable";
 import { CANCEL_TAGS, n8n, type CancelledBy } from "@/lib/integrations/n8n";
 import { adminClient } from "@/lib/supabase/admin";
+import { traceIds, traceStep } from "@/lib/trace";
 import { agentFreeSlots, contextFor, loadAgents, loadSettings, type SlotQuery } from "./availability";
 import { agentByEmail, agentById, handoffFailed, raiseAlert, recordEvent, slotTaken, toPayload } from "./core";
 import type { BookingRow } from "./types";
@@ -17,6 +18,7 @@ export async function bookingFor(actor: Actor, id: string): Promise<BookingRow> 
   const { data } = await adminClient().from("bookings").select("*").eq("id", id).neq("status", "failed").maybeSingle();
   if (!data) throw notFound();
   if (actor.role === "agent" && data.agent_email !== actor.agentEmail) throw notFound();
+  traceIds({ bookingId: data.id });
   return data as BookingRow;
 }
 
@@ -55,7 +57,9 @@ async function assertFree(agent: RosterAgent, start: Date, query: SlotQuery): Pr
   const date = toWall(start).date;
   const to = date > windowEnd ? date : windowEnd;
   const [[loaded], context] = await Promise.all([loadAgents([agent], from, to), contextFor(query, from, to)]);
-  if (!isFree(loaded, start, context)) throw slotTaken();
+  const reason = verdictAt(loaded, start, context);
+  traceStep("slot check", { agent: agent.name, start: start.toISOString(), reason });
+  if (reason !== null) throw slotTaken();
 }
 
 async function updateRow(id: string, change: Record<string, unknown>): Promise<BookingRow> {

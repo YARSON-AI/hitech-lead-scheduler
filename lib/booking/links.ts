@@ -1,4 +1,5 @@
 import "server-only";
+import { traceIds } from "@/lib/trace";
 import type { Actor } from "@/lib/auth/types";
 import { buildPool, jerusalemDayInfo } from "@/lib/engine/pool";
 import { fromWall, toWall } from "@/lib/engine/time";
@@ -163,6 +164,7 @@ async function assignmentFor(link: LinkRecord): Promise<Assignment> {
 export async function linkSlots(token: string): Promise<Record<string, string[]>> {
   const link = await liveLink(token);
   if (!link) throw new ApiError(410, "dead_link", "dead");
+  traceIds({ linkId: link.id });
   const assignment = await assignmentFor(link);
   if (assignment.mode === "manual") return agentFreeSlots(assignment.candidates[0], assignment.query);
   return slotsForPool(assignment.candidates, assignment.query);
@@ -171,6 +173,7 @@ export async function linkSlots(token: string): Promise<Record<string, string[]>
 export async function bookThroughLink(token: string, date: string, time: string): Promise<{ row: BookingRow; proof: string }> {
   const link = await liveLink(token);
   if (!link) throw new ApiError(410, "dead_link", "dead");
+  traceIds({ linkId: link.id });
   const db = adminClient();
   const { data: claimed } = await db.from("booking_links").update({ status: "used" }).eq("id", link.id).eq("status", "open").select("id");
   if (!claimed?.length) throw new ApiError(410, "dead_link", "dead");

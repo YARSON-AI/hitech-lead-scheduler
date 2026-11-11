@@ -6,7 +6,7 @@ import { route } from "@/lib/http/route";
 
 const schema = z.strictObject({ leadNumber, spouseLeadNumber: leadNumber.optional() });
 
-export const POST = route({ roles: STAFF, schema }, async ({ body }) => {
+export const POST = route({ roles: STAFF, schema, trace: "lead.check" }, async ({ body }) => {
   const lead = await validateLead(body.leadNumber);
   if (!body.spouseLeadNumber) return { lead: { name: lead.fullName, number: lead.number } };
   const assignment = await resolveAssignment({ mode: "spouse", lead, spouseLeadNumber: body.spouseLeadNumber });

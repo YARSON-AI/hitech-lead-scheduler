@@ -15,6 +15,7 @@ export interface PoolOptions {
 export interface PoolResult {
   agents: RosterAgent[];
   excluded: { trafficLight: number; specialization: number; monthlyQuota: number; pacing: number };
+  dropped: { name: string; reason: "trafficLight" | "specialization" | "monthlyQuota" | "pacing" }[];
 }
 
 export function jerusalemDayInfo(now: Date = new Date()): { daysElapsed: number; daysInMonth: number } {
@@ -45,22 +46,27 @@ export function buildPool(roster: RosterAgent[], options: PoolOptions): PoolResu
   const random = options.random ?? Math.random;
   const excluded = { trafficLight: 0, specialization: 0, monthlyQuota: 0, pacing: 0 };
   const isExcludedFor = (agent: RosterAgent, type?: string | null) => !!type && agent.exclusions[type] === true;
+  const dropped: PoolResult["dropped"] = [];
+  const drop = (list: RosterAgent[], reason: PoolResult["dropped"][number]["reason"]) => list.forEach((agent) => dropped.push({ name: agent.name, reason }));
 
   if (options.mode === "manual") {
     const agents = roster
       .filter((agent) => !isExcludedFor(agent, options.specialization))
       .sort((a, b) => a.name.localeCompare(b.name, "he"));
     excluded.specialization = roster.length - agents.length;
-    return { agents, excluded };
+    drop(roster.filter((agent) => !agents.includes(agent)), "specialization");
+    return { agents, excluded, dropped };
   }
 
   const matched = roster.filter((agent) => {
     if (agent.trafficLight === FORBIDDEN_TRAFFIC_LIGHT) {
       excluded.trafficLight++;
+      drop([agent], "trafficLight");
       return false;
     }
     if (isExcludedFor(agent, options.specialization) || isExcludedFor(agent, options.interest)) {
       excluded.specialization++;
+      drop([agent], "specialization");
       return false;
     }
     return true;
@@ -69,6 +75,7 @@ export function buildPool(roster: RosterAgent[], options: PoolOptions): PoolResu
   const primary = matched.filter((agent) => !atMonthlyLimit(agent));
   const selected = primary.length > 0 ? primary : matched;
   excluded.monthlyQuota = matched.length - selected.length;
+  drop(matched.filter((agent) => !selected.includes(agent)), "monthlyQuota");
 
   const ratioSort = (list: RosterAgent[]) =>
     [...list].sort((a, b) => {
@@ -76,7 +83,7 @@ export function buildPool(roster: RosterAgent[], options: PoolOptions): PoolResu
       return diff !== 0 ? diff : random() - 0.5;
     });
 
-  if (selected.length <= 1) return { agents: selected, excluded };
+  if (selected.length <= 1) return { agents: selected, excluded, dropped };
 
   const kept: RosterAgent[] = [];
   const paced: RosterAgent[] = [];
@@ -91,6 +98,7 @@ export function buildPool(roster: RosterAgent[], options: PoolOptions): PoolResu
     final = [...final, ...ratioSort(paced).slice(0, MIN_AVAILABLE_HOSTS - final.length)];
   }
   excluded.pacing = selected.length - final.length;
+  drop(selected.filter((agent) => !final.includes(agent)), "pacing");
 
-  return { agents: ratioSort(final), excluded };
+  return { agents: ratioSort(final), excluded, dropped };
 }

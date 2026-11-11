@@ -39,6 +39,19 @@ describe("automatic pool", () => {
     expect(result.map((agent) => agent.id)).toEqual([open.id]);
   });
 
+  it("names the rule that removed each agent", () => {
+    const red = make({ trafficLight: "🔴" });
+    const excluded = make({ exclusions: { pension: true } });
+    const full = make({ monthlyQuota: 5, monthlyCount: 5 });
+    const open = make();
+    const { dropped } = buildPool([red, excluded, full, open], { mode: "auto", today, random: () => 0.5, specialization: "pension" });
+    expect(dropped).toEqual([
+      { name: red.name, reason: "trafficLight" },
+      { name: excluded.name, reason: "specialization" },
+      { name: full.name, reason: "monthlyQuota" },
+    ]);
+  });
+
   it("uses agents over quota only when nobody is under it", () => {
     const over = make({ monthlyQuota: 5, monthlyCount: 5 });
     const under = make();

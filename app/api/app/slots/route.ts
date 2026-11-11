@@ -7,7 +7,7 @@ import { route } from "@/lib/http/route";
 
 const schema = z.strictObject(assignmentSchema);
 
-export const POST = route({ roles: STAFF, schema }, async ({ body }) => {
+export const POST = route({ roles: STAFF, schema, trace: "slots" }, async ({ body }) => {
   const lead = await validateLead(body.leadNumber);
   const assignment = await resolveAssignment({ ...body, lead });
   const [slots, settings] = await Promise.all([slotsForAssignment(assignment), loadSettings(assignment.query.profile)]);

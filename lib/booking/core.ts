@@ -1,12 +1,13 @@
 import "server-only";
 import type { Actor } from "@/lib/auth/types";
 import { buildPool, jerusalemDayInfo, paceRatio } from "@/lib/engine/pool";
-import { isFree } from "@/lib/engine/availability";
+import { verdictAt } from "@/lib/engine/availability";
 import { addDays, toWall, todayInJerusalem } from "@/lib/engine/time";
 import { ApiError } from "@/lib/http/route";
 import { airtable, type RosterAgent } from "@/lib/integrations/airtable";
 import { n8n, type BookingPayload, type ValidatedLead } from "@/lib/integrations/n8n";
 import { adminClient } from "@/lib/supabase/admin";
+import { traceIds, traceStep } from "@/lib/trace";
 import { contextFor, loadAgents, loadSettings, slotsForPool, type SlotQuery } from "./availability";
 import type { BookingRow } from "./types";
 
@@ -74,11 +75,13 @@ export async function validateLead(number: string): Promise<ValidatedLead> {
     throw new ApiError(503, "lead_lookup_failed", LEAD_ERROR);
   }
   const lead = leads.find((row) => row.number === number);
+  traceStep("lead", { number, found: !!lead, interest: lead?.interestName ?? null });
   if (!lead) throw new ApiError(404, "lead_not_found", LEAD_ERROR);
   return lead;
 }
 
 export async function raiseAlert(kind: string, details: { agentEmail?: string; agentName?: string; bookingId?: string }): Promise<void> {
+  traceStep("alert", { kind, agent: details.agentName ?? null });
   const db = adminClient();
   const { error } = await db.from("alerts").insert({ kind, agent_email: details.agentEmail, agent_name: details.agentName, booking_id: details.bookingId });
   if (error && error.code !== "23505") throw error;
@@ -127,21 +130,31 @@ export async function resolveAssignment(input: AssignmentInput): Promise<Assignm
       .limit(1)
       .maybeSingle();
     const ids = partner ? [partner.id, partner.outlook_event_id].filter(Boolean) : [];
+    traceStep("assignment", { mode: "spouse", agent: agent.name, partnerBooking: partner?.id ?? null });
     return { mode: "spouse", candidates: [agent], query: { profile: "spouse", ignoreQuota: true, unpaddedBlockIds: ids }, partner, spouseLead };
   }
 
   if (input.mode === "manual") {
     const { agents } = buildPool(roster, { mode: "manual", specialization: input.specialization, today: jerusalemDayInfo() });
     const agent = agents.find((row) => row.id === input.agentId);
+    traceStep("assignment", { mode: "manual", agent: agent?.name ?? null, specialization: input.specialization ?? null });
     if (!agent) throw new ApiError(400, "agent_not_available", "הסוכן/ת שנבחר/ה אינו/ה זמין/ה");
     return { mode: "manual", candidates: [agent], query: { profile: "regular" }, partner: null, spouseLead: null };
   }
 
-  const { agents, excluded } = buildPool(roster, {
+  const today = jerusalemDayInfo();
+  const { agents, excluded, dropped } = buildPool(roster, {
     mode: "auto",
     specialization: input.specialization,
     interest: input.lead.interestName,
-    today: jerusalemDayInfo(),
+    today,
+  });
+  traceStep("pool", {
+    mode: "auto",
+    specialization: input.specialization ?? null,
+    interest: input.lead.interestName ?? null,
+    order: agents.map((agent) => ({ agent: agent.name, paceRatio: Math.round(paceRatio(agent, today) * 100) / 100 })),
+    dropped,
   });
   console.log(JSON.stringify({ level: "info", at: "pool", size: agents.length, excluded }));
   return { mode: "auto", candidates: agents, query: { profile: "regular" }, partner: null, spouseLead: null };
@@ -189,9 +202,16 @@ export async function createBooking(input: CreateInput): Promise<BookingRow> {
     const from = todayInJerusalem();
     const to = addDays(from, settings.windowDays);
     const [agents, context] = await Promise.all([loadAgents(candidates, from, to > date ? to : date), contextFor(assignment.query, from, to > date ? to : date)]);
-    const free = new Set(agents.filter((agent) => isFree(agent, start, context)).map((agent) => agent.email));
-    candidates = candidates.filter((agent) => free.has(agent.email));
+    const reasons = new Map(agents.map((agent) => [agent.email, verdictAt(agent, start, context)]));
+    traceStep("slot check", {
+      start: start.toISOString(),
+      free: candidates.filter((agent) => reasons.get(agent.email) === null).map((agent) => agent.name),
+      notFree: candidates.filter((agent) => reasons.get(agent.email) !== null).map((agent) => ({ agent: agent.name, reason: reasons.get(agent.email) ?? "no_data" })),
+    });
+    candidates = candidates.filter((agent) => reasons.get(agent.email) === null);
     if (candidates.length === 0) throw slotTaken();
+  } else {
+    traceStep("slot check", { start: start.toISOString(), skipped: "forced" });
   }
 
   const spouse = assignment.spouseLead;
@@ -239,8 +259,11 @@ export async function createBooking(input: CreateInput): Promise<BookingRow> {
       chosen = agent;
       break;
     }
+    traceStep("taken meanwhile", { agent: agent.name });
   }
   if (!row || !chosen) throw slotTaken();
+  traceIds({ bookingId: row.id, linkId: input.linkId });
+  traceStep("chosen", { agent: chosen.name, ...(row.assignment_reason as Record<string, unknown>) });
 
   await recordEvent(input.actor, row.id, "created", {
     after: { agent: row.agent_name, start: row.start_at, mode: assignment.mode, source: input.source },

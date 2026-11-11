@@ -205,7 +205,11 @@ export function publicSlots(union: SlotUnion): Record<string, string[]> {
   return out;
 }
 
+export function verdictAt(agent: AgentAvailability, start: Date, context: EngineContext): Reason | "not_a_slot" | null {
+  const verdict = evaluateDay(agent, toWall(start).date, context).find((row) => row.start === start.getTime());
+  return verdict ? verdict.reason : "not_a_slot";
+}
+
 export function isFree(agent: AgentAvailability, start: Date, context: EngineContext): boolean {
-  const wall = toWall(start);
-  return evaluateDay(agent, wall.date, context).some((verdict) => verdict.start === start.getTime() && verdict.reason === null);
+  return verdictAt(agent, start, context) === null;
 }
