@@ -113,7 +113,7 @@ export function DateField({
 
   return (
     <>
-      <button type="button" disabled={!!disabled} aria-haspopup="dialog" aria-expanded={!!rect} onClick={disabled ? undefined : toggle} style={controlStyle(!!rect, disabled)}>
+      <button type="button" className="hti-ctl" disabled={!!disabled} aria-haspopup="dialog" aria-expanded={!!rect} onClick={disabled ? undefined : toggle} style={controlStyle(!!rect, disabled)}>
         <span dir="ltr">{value ? formatDate(value) : placeholder}</span>
         <Icon name="calendar" size={18} />
       </button>

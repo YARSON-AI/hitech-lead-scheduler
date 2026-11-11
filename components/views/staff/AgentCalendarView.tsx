@@ -84,7 +84,7 @@ export function AgentCalendarView({ v }: { v: VM }) {
                   {(v.hourLabels ?? []).map((t: VM, index: number) => (
                     <Fragment key={t.key ?? t.id ?? index}>
                       <div style={css(v.hourStyle)}>
-                        <span dir="ltr">
+                        <span dir="ltr" style={css(v.hourLabelStyle)}>
                           {t.label}
                         </span>
                       </div>

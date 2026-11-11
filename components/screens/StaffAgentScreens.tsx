@@ -224,7 +224,6 @@ const TONES: Record<string, { fill: string; border: string; text: string }> = {
   meeting: { fill: "var(--teal-100)", border: "var(--teal-400)", text: "var(--teal-800)" },
   pair: { fill: "var(--purple-100)", border: "var(--purple-300)", text: "var(--purple-700)" },
   busy: { fill: "var(--gray-200)", border: "var(--gray-400)", text: "var(--gray-700)" },
-  buffer: { fill: "var(--gray-100)", border: "var(--gray-300)", text: "var(--gray-600)" },
   blocked: { fill: "var(--red-100)", border: "color-mix(in srgb, var(--red-500) 45%, var(--red-100))", text: "var(--red-600)" },
   holiday: { fill: "var(--amber-100)", border: "color-mix(in srgb, var(--amber-500) 45%, var(--amber-100))", text: "var(--amber-600)" },
   quota: { fill: "var(--blue-100)", border: "color-mix(in srgb, var(--blue-500) 45%, var(--blue-100))", text: "var(--blue-600)" },
@@ -253,6 +252,14 @@ const PART_STYLE: CSSProperties = {
 function blockVM(block: CalendarBlock) {
   const hours = (block.end - block.start) / 60;
   const top = (block.start / 60) * ROW;
+  if (block.kind === "buffer") {
+    return {
+      isSingle: false,
+      isPair: false,
+      title: block.title,
+      style: { position: "absolute", top, height: hours * ROW, insetInlineStart: 0, insetInlineEnd: 0, backgroundImage: "repeating-linear-gradient(135deg, var(--gray-300) 0, var(--gray-300) 1px, transparent 1px, transparent 7px)" } as CSSProperties,
+    };
+  }
   if (block.kind === "off" || block.kind === "notice") {
     return {
       isSingle: false,
@@ -329,13 +336,16 @@ export function AgentCalendarScreen({ agent }: { agent: AgentRow }) {
   const scroll = useRef<HTMLDivElement>(null);
   const sendCalLink = useCalendarLink(agent.id, agent.email);
 
+  const latestLoad = useRef(0);
+
   const load = useCallback(async () => {
+    const id = ++latestLoad.current;
     setError(false);
     try {
       const result = await api<{ days: CalendarDay[] }>(`/api/app/agents/${agent.id}/calendar?from=${from}&days=${size}`);
-      setDays(result.days);
+      if (id === latestLoad.current) setDays(result.days);
     } catch {
-      setError(true);
+      if (id === latestLoad.current) setError(true);
     }
   }, [agent.id, from, size]);
 
@@ -350,7 +360,8 @@ export function AgentCalendarScreen({ agent }: { agent: AgentRow }) {
 
   const timeCol = common.isPhone ? 38 : 56;
   const gridMin = common.isPhone ? 0 : size === 7 ? 700 : size === 3 ? 340 : 250;
-  const gridStyle = { minWidth: gridMin, display: "grid", gridTemplateColumns: `${timeCol}px repeat(${size}, minmax(0, 1fr))`, gap: 0 };
+  const gridStyle = { minWidth: gridMin, display: "grid", gridTemplateColumns: `${timeCol}px repeat(${days.length || size}, minmax(0, 1fr))`, gap: 0 };
+  const bodyStyle = { ...gridStyle, paddingTop: 10, paddingBottom: 10 };
 
   const visibleDays = days.map((day, index) => ({
     key: day.date,
@@ -424,15 +435,15 @@ export function AgentCalendarScreen({ agent }: { agent: AgentRow }) {
       { label: "פגישה במערכת", bg: TONES.meeting.fill, border: TONES.meeting.border },
       { label: "פגישה זוגית", bg: TONES.pair.fill, border: TONES.pair.border },
       { label: "עסוק", bg: TONES.busy.fill, border: TONES.busy.border },
-      { label: "מרווח", bg: TONES.buffer.fill, border: TONES.buffer.border },
       { label: "חסום", bg: TONES.blocked.fill, border: TONES.blocked.border },
       { label: "חג", bg: TONES.holiday.fill, border: TONES.holiday.border },
       { label: "מכסה יומית מלאה", bg: TONES.quota.fill, border: TONES.quota.border },
       { label: "מחוץ לשעות הפעילות", bg: "rgba(24,24,24,.035)", border: "var(--border-default)" },
     ],
     calHeadStyle: gridStyle,
-    calGridStyle: gridStyle,
-    hourStyle: { height: ROW, flex: "none", display: "flex", alignItems: "flex-start", justifyContent: "center", paddingTop: 2, font: "var(--type-caption)", fontSize: common.isPhone ? 10 : 12, color: "var(--text-tertiary)" },
+    calGridStyle: bodyStyle,
+    hourStyle: { height: ROW, flex: "none", position: "relative", font: "var(--type-caption)", fontSize: common.isPhone ? 10 : 12, lineHeight: "16px", color: "var(--text-tertiary)" },
+    hourLabelStyle: { position: "absolute", top: 0, insetInlineStart: 0, insetInlineEnd: 0, textAlign: "center", transform: "translateY(-50%)", whiteSpace: "nowrap" },
     hourLabels: Array.from({ length: 24 }, (_, hour) => ({ key: hour, label: `${String(hour).padStart(2, "0")}:00` })),
     visibleDays,
     calScroll: scroll,

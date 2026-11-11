@@ -85,7 +85,7 @@ export function CustomerView({ v }: { v: VM }) {
                                 {v.custSlotCount}
                               </div>
                             </div>
-                            <TimeSlots slots={v.custSlots} value={v.custSlot} onChange={v.pickCustSlot} columns={v.custCols} />
+                            <div className="hti-slots"><TimeSlots slots={v.custSlots} value={v.custSlot} onChange={v.pickCustSlot} columns={v.custCols} /></div>
                           </div>
                         </div>
                         {v.isDesktop && (

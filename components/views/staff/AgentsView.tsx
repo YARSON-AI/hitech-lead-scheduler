@@ -44,7 +44,7 @@ export function AgentsView({ v }: { v: VM }) {
           <div style={{ flexDirection: "column", gap: "12px" }} className="hti-cqc">
             {(v.agentCards ?? []).map((a: VM, index: number) => (
               <Fragment key={a.key ?? a.id ?? index}>
-                <div onClick={a.go} style={{ background: "var(--surface-card)", borderRadius: "var(--radius-card)", boxShadow: "var(--shadow-lg)", padding: "16px", display: "flex", flexDirection: "column", gap: "12px", cursor: "pointer" }}>
+                <div className="hti-cardlink" onClick={a.go} style={{ background: "var(--surface-card)", borderRadius: "var(--radius-card)", boxShadow: "var(--shadow-lg)", padding: "16px", display: "flex", flexDirection: "column", gap: "12px", cursor: "pointer" }}>
                   <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px" }}>
                     <div style={{ minWidth: "0" }}>
                       <div style={{ font: "var(--type-label)", color: "var(--text-primary)" }}>

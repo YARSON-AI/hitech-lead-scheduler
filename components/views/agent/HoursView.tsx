@@ -22,7 +22,7 @@ export function AgentHoursView({ v }: { v: VM }) {
             {(v.days ?? []).map((d: VM, index: number) => (
               <Fragment key={d.key ?? d.id ?? index}>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", alignItems: "center", padding: "12px 0", borderBottom: "1px solid var(--border-subtle)" }}>
-                  <button type="button" onClick={d.toggle} style={{ display: "flex", alignItems: "center", gap: "10px", flex: "1 1 160px", minWidth: "150px", background: "none", border: "none", padding: "0", cursor: "pointer", font: "var(--type-label)", color: "var(--text-primary)", textAlign: "start" }}>
+                  <button type="button" className="hti-sw" onClick={d.toggle} style={{ display: "flex", alignItems: "center", gap: "10px", flex: "1 1 160px", minWidth: "150px", background: "none", border: "none", padding: "0", cursor: "pointer", font: "var(--type-label)", color: "var(--text-primary)", textAlign: "start" }}>
                     <span style={{ display: "inline-flex", width: "44px", height: "24px", borderRadius: "var(--radius-pill)", background: `${d.trackBg}`, position: "relative", transition: "background var(--dur-base) var(--ease-out)", flex: "none" }}>
                       <span style={{ position: "absolute", top: "2px", insetInlineStart: `${d.knob}`, width: "20px", height: "20px", borderRadius: "50%", background: "#fff", boxShadow: "var(--shadow-toggle)", transition: "inset-inline-start var(--dur-base) var(--ease-out)" }} />
                     </span>
@@ -32,14 +32,14 @@ export function AgentHoursView({ v }: { v: VM }) {
                   </button>
                   <div style={{ display: "flex", gap: "8px", alignItems: "center", flex: "1 1 220px", opacity: `${d.opacity}` }}>
                     <div style={{ position: "relative", flex: "1", minWidth: "96px" }}>
-                      <button type="button" onClick={d.openStart} disabled={d.off} style={css(d.startStyle)}>
+                      <button type="button" onClick={d.openStart} className="hti-ctl" disabled={d.off} style={css(d.startStyle)}>
                         <span dir="ltr">
                           {d.start}
                         </span>
                       </button>
                       {d.startOpen && (
                         <>
-                          <div style={{ position: "absolute", zIndex: "30", top: "100%", insetInlineStart: "0", marginTop: "6px", width: "208px", maxHeight: "232px", overflowY: "auto", background: "#fff", border: "1px solid var(--border-default)", borderRadius: "var(--radius-control)", boxShadow: "var(--shadow-xl)", padding: "8px", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "6px" }} className="hti-pop">
+                          <div className="hti-pop hti-slots" style={{ position: "absolute", zIndex: "30", top: "100%", insetInlineStart: "0", marginTop: "6px", width: "208px", maxHeight: "232px", overflowY: "auto", background: "#fff", border: "1px solid var(--border-default)", borderRadius: "var(--radius-control)", boxShadow: "var(--shadow-xl)", padding: "8px", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "6px" }}>
                             {(v.timeOptions ?? []).map((t: VM, index: number) => (
                               <Fragment key={t.key ?? t.id ?? index}>
                                 <button type="button" dir="ltr" onClick={t.pick} style={css(t.style)}>
@@ -55,14 +55,14 @@ export function AgentHoursView({ v }: { v: VM }) {
                       –
                     </span>
                     <div style={{ position: "relative", flex: "1", minWidth: "96px" }}>
-                      <button type="button" onClick={d.openEnd} disabled={d.off} style={css(d.endStyle)}>
+                      <button type="button" onClick={d.openEnd} className="hti-ctl" disabled={d.off} style={css(d.endStyle)}>
                         <span dir="ltr">
                           {d.end}
                         </span>
                       </button>
                       {d.endOpen && (
                         <>
-                          <div style={{ position: "absolute", zIndex: "30", top: "100%", insetInlineStart: "0", marginTop: "6px", width: "208px", maxHeight: "232px", overflowY: "auto", background: "#fff", border: "1px solid var(--border-default)", borderRadius: "var(--radius-control)", boxShadow: "var(--shadow-xl)", padding: "8px", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "6px" }} className="hti-pop">
+                          <div className="hti-pop hti-slots" style={{ position: "absolute", zIndex: "30", top: "100%", insetInlineStart: "0", marginTop: "6px", width: "208px", maxHeight: "232px", overflowY: "auto", background: "#fff", border: "1px solid var(--border-default)", borderRadius: "var(--radius-control)", boxShadow: "var(--shadow-xl)", padding: "8px", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "6px" }}>
                             {(v.timeOptions ?? []).map((t: VM, index: number) => (
                               <Fragment key={t.key ?? t.id ?? index}>
                                 <button type="button" dir="ltr" onClick={t.pick} style={css(t.style)}>

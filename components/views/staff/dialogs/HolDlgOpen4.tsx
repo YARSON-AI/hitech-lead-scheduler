@@ -36,7 +36,7 @@ export function HolDlgOpen4({ v }: { v: VM }) {
           )}
           {v.holStateOn && (
             <>
-              <button type="button" onClick={v.onHolOn} aria-pressed={v.holOnPressed} style={{ display: "flex", alignItems: "center", gap: "10px", alignSelf: "flex-start", background: "none", border: "none", padding: "0", cursor: "pointer", font: "var(--type-label)", fontFamily: "var(--font-body)", color: "var(--text-primary)" }}>
+              <button type="button" className="hti-sw" onClick={v.onHolOn} aria-pressed={v.holOnPressed} style={{ display: "flex", alignItems: "center", gap: "10px", alignSelf: "flex-start", background: "none", border: "none", padding: "0", cursor: "pointer", font: "var(--type-label)", fontFamily: "var(--font-body)", color: "var(--text-primary)" }}>
                 <span style={{ display: "inline-flex", width: "44px", height: "24px", borderRadius: "var(--radius-pill)", background: `${v.holTrack}`, position: "relative", flex: "none", transition: "background var(--dur-base) var(--ease-out)" }}>
                   <span style={{ position: "absolute", top: "2px", insetInlineStart: `${v.holKnob}`, width: "20px", height: "20px", borderRadius: "50%", background: "#fff", boxShadow: "var(--shadow-toggle)", transition: "inset-inline-start var(--dur-base) var(--ease-out)" }} />
                 </span>

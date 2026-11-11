@@ -70,7 +70,7 @@ export function BookingsView({ v }: { v: VM }) {
           <div style={{ flexDirection: "column", gap: "12px" }} className="hti-cqc">
             {(v.bookingCards ?? []).map((b: VM, index: number) => (
               <Fragment key={b.key ?? b.id ?? index}>
-                <div onClick={b.go} style={{ background: "var(--surface-card)", borderRadius: "var(--radius-card)", boxShadow: "var(--shadow-lg)", padding: "16px", display: "flex", flexDirection: "column", gap: "12px", cursor: "pointer" }}>
+                <div className="hti-cardlink" onClick={b.go} style={{ background: "var(--surface-card)", borderRadius: "var(--radius-card)", boxShadow: "var(--shadow-lg)", padding: "16px", display: "flex", flexDirection: "column", gap: "12px", cursor: "pointer" }}>
                   <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px" }}>
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", minWidth: "0" }}>
                       <span dir="ltr" style={{ display: "inline-block", whiteSpace: "nowrap", fontFamily: "var(--font-display)", fontWeight: "600", fontSize: "20px", color: "var(--text-primary)" }}>

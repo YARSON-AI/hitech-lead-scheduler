@@ -73,11 +73,12 @@ export async function agentCalendar(agentId: string, from: string, days: number)
 
   for (let date = from; date <= to; date = addDays(date, 1)) {
     const verdicts = evaluateDay(loaded, date, context);
+    const base = evaluateDay({ ...loaded, busy: [] }, date, context);
     const holiday = holidayRows.data?.find((row) => row.date === date && row.blocks);
     const { blocks: overrideBlocks } = dayWindows(loaded, date);
     const wholeBlock = overrideBlocks.some(([start, end]) => start === 0 && end === 1440);
     const note = loaded.overrides.find((row) => row.date === date && row.kind === "block" && !row.startTime);
-    const quotaFull = verdicts.some((verdict) => verdict.reason === "quota");
+    const quotaFull = base.some((verdict) => verdict.reason === "quota");
     const allDay: CalendarDay["allDay"] = holiday && !holiday.blocked_from
       ? { kind: "holiday", label: holiday.name }
       : wholeBlock
@@ -99,22 +100,24 @@ export async function agentCalendar(agentId: string, from: string, days: number)
           kind,
           start: current.start,
           end: current.end,
-          label: kind === "off" || kind === "notice" ? "" : kind === "blocked" ? "חסום" : kind === "holiday" ? "חג" : "מרווח",
-          time: kind === "off" || kind === "notice" ? "" : minutesToTime(current.start),
+          label: kind === "blocked" ? "חסום" : kind === "holiday" ? "חג" : "",
+          time: kind === "blocked" || kind === "holiday" ? minutesToTime(current.start) : "",
           title: REASON_TEXT[current.reason],
         });
       }
     };
-    for (const verdict of verdicts) {
+    verdicts.forEach((verdict, index) => {
       const minutes = wallMinutes(verdict.start);
+      const underlying = base[index].reason;
+      const reason: Reason | null = underlying && underlying !== "quota" ? underlying : verdict.reason === "busy" || verdict.reason === "buffer" ? "buffer" : null;
       const active = run as { reason: Reason; start: number; end: number } | null;
-      if (verdict.reason && verdict.reason !== "busy" && verdict.reason !== "quota" && active?.reason === verdict.reason && active.end === minutes) {
+      if (reason && active?.reason === reason && active.end === minutes) {
         active.end = minutes + step;
       } else {
         flush();
-        if (verdict.reason && verdict.reason !== "busy" && verdict.reason !== "quota") run = { reason: verdict.reason, start: minutes, end: minutes + step };
+        if (reason) run = { reason, start: minutes, end: minutes + step };
       }
-    }
+    });
     flush();
     const last = verdicts[verdicts.length - 1];
     if (last && wallMinutes(last.start) + step < 1440 && blocks.length && blocks[blocks.length - 1].kind === "off") blocks[blocks.length - 1].end = 1440;

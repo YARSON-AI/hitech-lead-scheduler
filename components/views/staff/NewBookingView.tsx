@@ -270,7 +270,7 @@ export function NewBookingView({ v }: { v: VM }) {
                               {v.slotCount}
                             </div>
                           </div>
-                          <TimeSlots slots={v.newSlots} value={v.newSlot} onChange={v.pickNewSlot} columns={4} />
+                          <div className="hti-slots"><TimeSlots slots={v.newSlots} value={v.newSlot} onChange={v.pickNewSlot} columns={4} /></div>
                           <div style={{ marginTop: "4px", paddingTop: "14px", borderTop: "1px dashed var(--border-default)", display: "flex", flexDirection: "column", gap: "10px" }}>
                             <div style={{ font: "var(--type-body-sm)", color: "var(--text-secondary)", textWrap: "pretty" }}>
                               {v.gridForce ? "מועד שהסוכן/ת אינו פנוי/ה בו?" : "הלקוח/ה מעדיף/ה לבחור מועד בעצמו/ה?"}

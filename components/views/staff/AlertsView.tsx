@@ -2,7 +2,7 @@
 
  
 import { Fragment } from "react";
-import { Button, Icon, IconButton } from "@/components/ds";
+import { Button, Card, EmptyState, Icon, IconButton } from "@/components/ds";
 import { css, type VM } from "@/components/views/vm";
 
 export function AlertsView({ v }: { v: VM }) {
@@ -44,6 +44,11 @@ export function AlertsView({ v }: { v: VM }) {
             </div>
           </Fragment>
         ))}
+        {!(v.alerts ?? []).length && (
+          <Card padding="lg">
+            <EmptyState icon="bell" title="אין התראות" description="התראות על פגישות שדורשות טיפול יופיעו כאן." />
+          </Card>
+        )}
       </div>
     </>
   );

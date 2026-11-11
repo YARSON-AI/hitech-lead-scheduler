@@ -1,4 +1,4 @@
-export type TrafficLight = "🟢" | "🟡" | "🔴";
+export type TrafficLight = "🟢" | "🟠" | "🔴";
 
 export interface RosterAgent {
   id: string;

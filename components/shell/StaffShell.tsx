@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import type { CSSProperties, ReactNode } from "react";
 import { Button, Icon, PageHeader } from "@/components/ds";
 import { api } from "@/lib/client/api";
+import { PhoneNav } from "./PhoneNav";
 import { ToastProvider } from "./ToastProvider";
 
 const NAV = [
@@ -62,25 +63,6 @@ export function StaffShell({
     textDecoration: "none",
   });
 
-  const phoneStyle = (on: boolean): CSSProperties => ({
-    display: "flex",
-    alignItems: "center",
-    gap: 6,
-    flex: "none",
-    height: 36,
-    padding: "0 14px",
-    border: "none",
-    borderRadius: "var(--radius-pill)",
-    cursor: "pointer",
-    whiteSpace: "nowrap",
-    background: on ? "var(--color-primary)" : "transparent",
-    color: on ? "#fff" : "var(--gray-600)",
-    fontFamily: "var(--font-body)",
-    fontWeight: 500,
-    fontSize: 14,
-    textDecoration: "none",
-  });
-
   return (
     <ToastProvider>
       <div style={{ maxWidth: 1360, margin: "0 auto", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
@@ -95,7 +77,7 @@ export function StaffShell({
               תיאום פגישה חדשה
             </Button>
             {items.map((item) => (
-              <Link key={item.key} href={item.href} style={deskStyle(item.on)} aria-current={item.on ? "page" : undefined}>
+              <Link key={item.key} href={item.href} className="hti-nav" data-on={item.on ? "1" : "0"} style={deskStyle(item.on)} aria-current={item.on ? "page" : undefined}>
                 <Icon name={item.icon} size={20} />
                 <span style={{ flex: 1, textAlign: "start" }}>{item.label}</span>
                 {item.count > 0 && (
@@ -122,24 +104,13 @@ export function StaffShell({
             ))}
           </nav>
           <main style={{ flex: "1 1 520px", minWidth: 0, padding: "24px 20px 48px", display: "flex", flexDirection: "column", gap: 20 }}>
-            <div className="hti-phone-only" style={{ position: "relative", width: "100%", minWidth: 0, borderRadius: "var(--radius-pill)", background: "var(--surface-subtle)" }}>
-              <div className="hti-hscroll" style={{ display: "flex", gap: 6, overflowX: "auto", padding: 4, borderRadius: "var(--radius-pill)" }}>
-                <Link href="/" style={{ ...phoneStyle(path === "/"), background: "var(--color-primary)", color: "#fff" }}>
-                  <Icon name="plus" size={16} />
-                  <span>תיאום חדש</span>
-                </Link>
-                {items.map((item) => (
-                  <Link key={item.key} href={item.href} style={phoneStyle(item.on)} aria-current={item.on ? "page" : undefined}>
-                    <Icon name={item.icon} size={16} />
-                    <span>{item.label}</span>
-                    {item.count > 0 && (
-                      <span style={{ minWidth: 20, borderRadius: 999, padding: "0 6px", background: item.on ? "rgba(255,255,255,.25)" : "var(--status-error)", color: "#fff", fontSize: 12, textAlign: "center" }}>
-                        {item.count}
-                      </span>
-                    )}
-                  </Link>
-                ))}
-              </div>
+            <div className="hti-phone-only">
+              <PhoneNav
+                items={[
+                  { key: "new", href: "/", label: "תיאום חדש", icon: "plus", on: path === "/", primary: true },
+                  ...items.map((item) => ({ key: item.key, href: item.href, label: item.label, icon: item.icon, count: item.count, on: item.on })),
+                ]}
+              />
             </div>
             {children}
           </main>

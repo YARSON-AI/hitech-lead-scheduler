@@ -170,7 +170,8 @@
 .hti-hscroll::-webkit-scrollbar { display: none }
 .hti-ibtn { transition: background-color var(--dur-fast), color var(--dur-fast) }
 .hti-ibtn:hover:not(:disabled) { background: var(--teal-100) !important; color: var(--teal-800) !important }
-.hti-q-neutral:hover, .hti-q-done:hover { background: var(--gray-50) !important }
+.hti-q { transition: background-color var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast) }
+.hti-q-neutral:hover, .hti-q-done:hover { background: #fff !important; border-color: var(--color-primary) !important; color: var(--color-primary-hover) !important }
 .hti-q-danger:hover { background: var(--red-50) !important }
 .hti-q-brand:hover { background: var(--teal-50) !important }
 .hti-xscroll { scrollbar-width: thin; scrollbar-color: var(--gray-300) transparent }
@@ -190,6 +191,18 @@
 .hti-cards .hti-cqt { display: none } .hti-cards .hti-cqc { display: flex }
 @media (max-width: 767px) { .hti-cqt { display: none } .hti-cqc { display: flex } }
 .hti-day:hover:not(:disabled) { background: var(--color-primary-soft) !important; color: var(--color-primary-hover) !important }
+.hti-nav, .hti-pill, .hti-ctl, .hti-sw, .hti-cardlink { transition: background-color var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast), box-shadow var(--dur-base) }
+.hti-nav[data-on="0"]:hover { background: var(--color-primary-soft) !important; color: var(--color-primary-hover) !important }
+.hti-pill[data-on="0"]:hover { background: var(--color-primary-soft) !important; color: var(--color-primary-hover) !important }
+.hti-pill-primary:hover { background: var(--color-primary-hover) !important }
+.hti-ctl[style*="var(--border-default)"]:not(:disabled):hover { border-color: var(--gray-400) !important }
+.hti-sw:hover { color: var(--color-primary-hover) !important }
+.hti-sw:hover > span:first-child { box-shadow: 0 0 0 3px var(--color-primary-soft-2, var(--teal-100)) }
+.hti-cardlink:hover, [style*="cursor: pointer"][style*="box-shadow: var(--shadow-lg)"]:hover { box-shadow: 0 0 0 2px var(--teal-200), var(--shadow-lg) !important }
+.hti-slots button[style*="var(--border-default)"]:not(:disabled):hover { border-color: var(--color-primary) !important; color: var(--color-primary-hover) !important }
+th[style*="cursor: pointer"]:hover { color: var(--color-primary-hover) !important }
+input + button[type="button"]:hover { color: var(--text-secondary) !important }
+tbody tr[style*="cursor: default"] { background: #fff !important }
 
 .hti{min-height:100vh;background:var(--bg-page-gradient);background-attachment:fixed}
 .hti-desk-only{display:flex}

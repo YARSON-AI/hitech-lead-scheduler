@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { PageHeader, Tabs } from "@/components/ds";
 import { useIsPhone } from "@/lib/client/hooks";
 import { logout } from "./StaffShell";
+import { PhoneNav } from "./PhoneNav";
 import { ToastProvider } from "./ToastProvider";
 
 const HREF: Record<string, string> = {
@@ -38,13 +39,13 @@ export function AgentShell({ firstName, meetingCount, children }: { firstName: s
         <PageHeader userName={firstName} onLogout={logout} logoSrc="/brand/logo.png" />
         <div style={{ padding: "0 16px", maxWidth: 776, width: "100%", margin: "0 auto" }}>
           {!isPhone && <Tabs tabs={tabs} value={current(path)} onChange={onChange} />}
+          {isPhone && (
+            <div style={{ paddingTop: 24 }}>
+              <PhoneNav items={tabs.map((tab) => ({ key: tab.value, href: HREF[tab.value], label: tab.label, icon: tab.icon, count: tab.count, on: current(path) === tab.value }))} />
+            </div>
+          )}
         </div>
-        <div style={{ flex: 1, padding: "20px 16px 88px", maxWidth: 776, width: "100%", margin: "0 auto" }}>{children}</div>
-        {isPhone && (
-          <div className="hti-hscroll" style={{ position: "sticky", bottom: 0, display: "flex", overflowX: "auto", padding: "10px 12px", background: "var(--surface-card)", borderTop: "1px solid var(--border-subtle)" }}>
-            <Tabs variant="pills" tabs={tabs} value={current(path)} onChange={onChange} />
-          </div>
-        )}
+        <div style={{ flex: 1, padding: isPhone ? "20px 16px 48px" : "20px 16px 88px", maxWidth: 776, width: "100%", margin: "0 auto" }}>{children}</div>
       </div>
     </ToastProvider>
   );

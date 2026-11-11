@@ -35,14 +35,14 @@ export function AgExcOpen1({ v }: { v: VM }) {
                 </FieldLabel>
                 <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                   <div style={{ position: "relative", flex: "1" }}>
-                    <button type="button" onClick={v.openExcStart} style={css(v.excStartStyle)}>
+                    <button type="button" onClick={v.openExcStart} className="hti-ctl" style={css(v.excStartStyle)}>
                       <span dir="ltr">
                         {v.excStart}
                       </span>
                     </button>
                     {v.excStartOpen && (
                       <>
-                        <div style={{ position: "absolute", zIndex: "30", top: "100%", insetInlineStart: "0", marginTop: "6px", width: "208px", maxHeight: "200px", overflowY: "auto", background: "#fff", border: "1px solid var(--border-default)", borderRadius: "var(--radius-control)", boxShadow: "var(--shadow-xl)", padding: "8px", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "6px" }} className="hti-pop">
+                        <div className="hti-pop hti-slots" style={{ position: "absolute", zIndex: "30", top: "100%", insetInlineStart: "0", marginTop: "6px", width: "208px", maxHeight: "200px", overflowY: "auto", background: "#fff", border: "1px solid var(--border-default)", borderRadius: "var(--radius-control)", boxShadow: "var(--shadow-xl)", padding: "8px", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "6px" }}>
                           {(v.timeOptions ?? []).map((t: VM, index: number) => (
                             <Fragment key={t.key ?? t.id ?? index}>
                               <button type="button" dir="ltr" onClick={t.pick} style={css(t.style)}>
@@ -58,14 +58,14 @@ export function AgExcOpen1({ v }: { v: VM }) {
                     –
                   </span>
                   <div style={{ position: "relative", flex: "1" }}>
-                    <button type="button" onClick={v.openExcEnd} style={css(v.excEndStyle)}>
+                    <button type="button" onClick={v.openExcEnd} className="hti-ctl" style={css(v.excEndStyle)}>
                       <span dir="ltr">
                         {v.excEnd}
                       </span>
                     </button>
                     {v.excEndOpen && (
                       <>
-                        <div style={{ position: "absolute", zIndex: "30", top: "100%", insetInlineStart: "0", marginTop: "6px", width: "208px", maxHeight: "200px", overflowY: "auto", background: "#fff", border: "1px solid var(--border-default)", borderRadius: "var(--radius-control)", boxShadow: "var(--shadow-xl)", padding: "8px", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "6px" }} className="hti-pop">
+                        <div className="hti-pop hti-slots" style={{ position: "absolute", zIndex: "30", top: "100%", insetInlineStart: "0", marginTop: "6px", width: "208px", maxHeight: "200px", overflowY: "auto", background: "#fff", border: "1px solid var(--border-default)", borderRadius: "var(--radius-control)", boxShadow: "var(--shadow-xl)", padding: "8px", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "6px" }}>
                           {(v.timeOptions ?? []).map((t: VM, index: number) => (
                             <Fragment key={t.key ?? t.id ?? index}>
                               <button type="button" dir="ltr" onClick={t.pick} style={css(t.style)}>

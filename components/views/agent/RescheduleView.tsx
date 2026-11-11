@@ -118,7 +118,7 @@ export function AgentRescheduleView({ v }: { v: VM }) {
                         {v.agResCount}
                       </div>
                     </div>
-                    <TimeSlots slots={v.agResSlots} value={v.agResSlot} onChange={v.pickAgResSlot} columns={3} />
+                    <div className="hti-slots"><TimeSlots slots={v.agResSlots} value={v.agResSlot} onChange={v.pickAgResSlot} columns={3} /></div>
                     {v.agResShowCurrent && (
                       <>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px", font: "var(--type-caption)", color: "var(--text-secondary)" }}>

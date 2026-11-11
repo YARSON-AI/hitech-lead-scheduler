@@ -3,7 +3,7 @@ import type { AgentRow } from "@/components/screens/StaffAgentScreens";
 import { airtable, type RosterAgent } from "@/lib/integrations/airtable";
 import { serverClient } from "@/lib/supabase/server";
 
-const lightOf = (agent: RosterAgent): AgentRow["light"] => (agent.trafficLight === "🔴" ? "red" : agent.trafficLight === "🟡" ? "amber" : "green");
+const lightOf = (agent: RosterAgent): AgentRow["light"] => (agent.trafficLight === "🔴" ? "red" : agent.trafficLight === "🟠" ? "amber" : "green");
 
 export async function agentRows(): Promise<AgentRow[]> {
   const supabase = await serverClient();
