@@ -12,6 +12,7 @@ jobs:
       SUPABASE_SECRET_KEY: ${{ secrets.DEV_SUPABASE_SECRET_KEY }}
       SUPABASE_DB_URL: ${{ secrets.DEV_SUPABASE_DB_URL }}
       CRON_SECRET: ${{ secrets.DEV_CRON_SECRET }}
+      LINK_TOKEN_KEY: ${{ secrets.DEV_LINK_TOKEN_KEY }}
       BOOKING_SYSTEM: engine
       N8N_MODE: stub
       AIRTABLE_MODE: stub
