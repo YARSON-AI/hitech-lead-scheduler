@@ -38,15 +38,18 @@ const calendar = z.object({
 });
 
 const nothing = z.object({});
+const created = z.object({ outlookEventId: z.string(), surenseMeetingId: z.string(), teamsJoinUrl: optionalText });
 
 const RESULTS = {
   validateLeads: z.object({ leads: z.array(lead) }),
   spouseAgent: z.object({ agentEmail: z.string().nullable() }),
   readCalendars: z.object({ calendars: z.array(calendar) }),
-  bookingCreated: z.object({ outlookEventId: z.string(), surenseMeetingId: z.string(), teamsJoinUrl: optionalText }),
+  bookingCreated: created,
   bookingRescheduled: nothing,
   bookingCancelled: nothing,
+  bookingTransferred: created,
   customerEmailChanged: nothing,
+  sendCalendarLink: nothing,
   sendAccountLink: nothing,
   sendAlertEmail: nothing,
 };
@@ -127,8 +130,8 @@ export const liveN8n: N8n = {
     await call("bookingCancelled", payload);
   },
 
-  async bookingTransferred() {
-    throw new IntegrationError("bookingTransferred");
+  async bookingTransferred(payload) {
+    return call("bookingTransferred", payload);
   },
 
   async customerEmailChanged(payload) {
@@ -139,8 +142,8 @@ export const liveN8n: N8n = {
     throw new IntegrationError("agentEmailChanged");
   },
 
-  async sendCalendarLink() {
-    throw new IntegrationError("sendCalendarLink");
+  async sendCalendarLink(payload) {
+    await call("sendCalendarLink", payload);
   },
 
   async sendAccountLink(payload) {

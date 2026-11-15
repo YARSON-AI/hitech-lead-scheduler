@@ -8,7 +8,7 @@ import { CANCEL_TAGS, n8n, type CancelledBy } from "@/lib/integrations/n8n";
 import { adminClient } from "@/lib/supabase/admin";
 import { traceIds, traceStep } from "@/lib/trace";
 import { agentFreeSlots, contextFor, loadAgents, loadSettings, type SlotQuery } from "./availability";
-import { agentByEmail, agentById, handoffFailed, raiseAlert, recordEvent, refuseWithoutWorkflow, slotTaken, toPayload } from "./core";
+import { agentByEmail, agentById, handoffFailed, raiseAlert, recordEvent, slotTaken, toPayload } from "./core";
 import type { BookingRow } from "./types";
 
 const user = (actor: Actor) => ({ kind: "user" as const, actor });
@@ -198,7 +198,6 @@ async function moveOne(actor: Actor, row: BookingRow, agent: RosterAgent, start:
 }
 
 export async function transfer(actor: Actor, id: string, agentId: string, startIso: string, forced: boolean): Promise<BookingRow> {
-  refuseWithoutWorkflow();
   const row = await bookingFor(actor, id);
   if (row.status !== "confirmed") throw new ApiError(409, "not_active", "הפגישה בוטלה");
   const agent = await agentById(agentId);

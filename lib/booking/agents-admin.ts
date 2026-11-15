@@ -9,7 +9,6 @@ import { agentById, raiseAlert, recordEvent, refuseWithoutWorkflow, toPayload } 
 import type { BookingRow } from "./types";
 
 export async function sendCalendarLink(actor: Actor, agentId: string): Promise<void> {
-  refuseWithoutWorkflow();
   const agent = await agentById(agentId);
   if (!agent) throw notFound();
   if (!(await hitRateLimit(`calendar-link:${agent.email}`, 3, 3600))) {
