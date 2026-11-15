@@ -8,7 +8,7 @@ import { CANCEL_TAGS, n8n, type CancelledBy } from "@/lib/integrations/n8n";
 import { adminClient } from "@/lib/supabase/admin";
 import { traceIds, traceStep } from "@/lib/trace";
 import { agentFreeSlots, contextFor, loadAgents, loadSettings, type SlotQuery } from "./availability";
-import { agentByEmail, agentById, handoffFailed, raiseAlert, recordEvent, slotTaken, toPayload } from "./core";
+import { agentByEmail, agentById, handoffFailed, raiseAlert, recordEvent, refuseWithoutWorkflow, slotTaken, toPayload } from "./core";
 import type { BookingRow } from "./types";
 
 const user = (actor: Actor) => ({ kind: "user" as const, actor });
@@ -90,7 +90,7 @@ export async function reschedule(actor: Actor, id: string, startIso: string, for
   const before = { start: row.start_at, end: row.end_at, forced: row.forced };
   const updated = await updateRow(id, { start_at: start.toISOString(), end_at: end.toISOString(), forced: forced || row.forced });
   try {
-    await n8n().bookingRescheduled({ ...toPayload(updated), previousStart: row.start_at });
+    await n8n().bookingRescheduled({ ...(await toPayload(updated)), previousStart: row.start_at });
   } catch {
     await updateRow(id, { start_at: before.start, end_at: before.end, forced: before.forced });
     throw handoffFailed();
@@ -112,7 +112,7 @@ export async function cancel(actor: Actor, id: string, cancelledBy: CancelledBy,
     cancelled_at: stamp(),
   });
   try {
-    await n8n().bookingCancelled({ ...toPayload(updated), cancelledBy, tag: CANCEL_TAGS[cancelledBy], reason });
+    await n8n().bookingCancelled({ ...(await toPayload(updated)), cancelledBy, tag: CANCEL_TAGS[cancelledBy], reason });
   } catch {
     await updateRow(id, { status: "confirmed", cancelled_by: null, cancelled_by_user: null, cancelled_by_name: null, cancel_reason: null, cancelled_at: null });
     throw handoffFailed();
@@ -131,7 +131,7 @@ export async function changeCustomerEmail(actor: Actor, id: string, which: "prim
   const previous = which === "primary" ? row.customer_email : row.additional_customer_email;
   const updated = await updateRow(id, { [column]: email });
   try {
-    await n8n().customerEmailChanged({ ...toPayload(updated), which, previousEmail: previous ?? undefined });
+    await n8n().customerEmailChanged({ ...(await toPayload(updated)), which, previousEmail: previous ?? undefined });
   } catch {
     await updateRow(id, { [column]: previous });
     throw handoffFailed();
@@ -172,7 +172,7 @@ async function moveOne(actor: Actor, row: BookingRow, agent: RosterAgent, start:
   });
   try {
     const created = await n8n().bookingTransferred({
-      ...toPayload(updated),
+      ...(await toPayload(updated)),
       agentPhone: agent.phone,
       previousAgentEmail: row.agent_email,
       previousOutlookEventId: row.outlook_event_id ?? undefined,
@@ -198,6 +198,7 @@ async function moveOne(actor: Actor, row: BookingRow, agent: RosterAgent, start:
 }
 
 export async function transfer(actor: Actor, id: string, agentId: string, startIso: string, forced: boolean): Promise<BookingRow> {
+  refuseWithoutWorkflow();
   const row = await bookingFor(actor, id);
   if (row.status !== "confirmed") throw new ApiError(409, "not_active", "הפגישה בוטלה");
   const agent = await agentById(agentId);

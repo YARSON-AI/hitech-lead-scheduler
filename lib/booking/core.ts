@@ -7,6 +7,7 @@ import { ApiError } from "@/lib/http/route";
 import { airtable, type RosterAgent } from "@/lib/integrations/airtable";
 import { n8n, type BookingPayload, type ValidatedLead } from "@/lib/integrations/n8n";
 import { adminClient } from "@/lib/supabase/admin";
+import { serverEnv } from "@/lib/env/server";
 import { traceIds, traceStep } from "@/lib/trace";
 import { contextFor, loadAgents, loadSettings, slotsForPool, type SlotQuery } from "./availability";
 import type { BookingRow } from "./types";
@@ -41,7 +42,13 @@ export async function recordEvent(
   if (error) throw error;
 }
 
-export function toPayload(row: BookingRow): BookingPayload {
+async function bookerEmail(row: BookingRow): Promise<string | undefined> {
+  if (row.source !== "staff" || !row.booked_by) return undefined;
+  const { data } = await adminClient().from("profiles").select("email").eq("id", row.booked_by).maybeSingle();
+  return data?.email ?? undefined;
+}
+
+export async function toPayload(row: BookingRow): Promise<BookingPayload> {
   return {
     bookingId: row.id,
     agentEmail: row.agent_email,
@@ -62,6 +69,7 @@ export function toPayload(row: BookingRow): BookingPayload {
     inPersonAddress: row.in_person_address ?? undefined,
     forced: row.forced,
     source: row.source,
+    bookedByEmail: await bookerEmail(row),
     outlookEventId: row.outlook_event_id ?? undefined,
     surenseMeetingId: row.surense_meeting_id ?? undefined,
   };
@@ -78,6 +86,10 @@ export async function validateLead(number: string): Promise<ValidatedLead> {
   traceStep("lead", { number, found: !!lead, interest: lead?.interestName ?? null });
   if (!lead) throw new ApiError(404, "lead_not_found", LEAD_ERROR);
   return lead;
+}
+
+export function refuseWithoutWorkflow(): void {
+  if (serverEnv().N8N_MODE === "live") throw new ApiError(503, "not_available", "הפעולה אינה זמינה עדיין");
 }
 
 export async function raiseAlert(kind: string, details: { agentEmail?: string; agentName?: string; bookingId?: string }): Promise<void> {
@@ -326,7 +338,7 @@ export async function createBooking(input: CreateInput): Promise<BookingRow> {
   if (forced) await recordEvent(input.actor, row.id, "forced", { after: { start: row.start_at } });
 
   try {
-    const created = await n8n().bookingCreated({ ...toPayload(row), agentPhone: chosen.phone });
+    const created = await n8n().bookingCreated({ ...(await toPayload(row)), agentPhone: chosen.phone });
     const { data: updated, error } = await db
       .from("bookings")
       .update({
@@ -365,7 +377,11 @@ export async function createBooking(input: CreateInput): Promise<BookingRow> {
   }
 
   if (assignment.mode === "manual") {
-    await airtable().logManualAssignment({ bookedBy: input.bookedByName ?? "customer", agentName: row.agent_name });
+    try {
+      await airtable().logManualAssignment({ bookedBy: input.bookedByName ?? "customer", agentName: row.agent_name });
+    } catch {
+      traceStep("manual_assignment_log_failed", { agent: row.agent_name });
+    }
   }
 
   return row;

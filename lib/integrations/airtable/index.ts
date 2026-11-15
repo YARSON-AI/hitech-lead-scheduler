@@ -1,16 +1,17 @@
 import "server-only";
 import { serverEnv } from "@/lib/env/server";
 import { traced } from "@/lib/trace";
+import { liveAirtable } from "./live";
 import { stubAirtable } from "./stub";
 import type { Airtable } from "./types";
 
-const stub = traced("airtable", stubAirtable, (method, result) => (method === "listAgents" ? { agents: (result as unknown[]).length } : {}));
+const summary = (method: string, result: unknown): Record<string, unknown> => (method === "listAgents" ? { agents: (result as unknown[]).length } : {});
+
+const stub = traced("airtable", stubAirtable, summary);
+const live = traced("airtable", liveAirtable, summary);
 
 export function airtable(): Airtable {
-  if (serverEnv().AIRTABLE_MODE === "live") {
-    throw new Error("The live Airtable integration arrives with HITECH-31");
-  }
-  return stub;
+  return serverEnv().AIRTABLE_MODE === "live" ? live : stub;
 }
 
 export type { Airtable, RosterAgent, Specialization } from "./types";

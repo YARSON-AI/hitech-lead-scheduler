@@ -1,6 +1,7 @@
 import "server-only";
 import { serverEnv } from "@/lib/env/server";
 import { traced } from "@/lib/trace";
+import { liveN8n } from "./live";
 import { stubN8n } from "./stub";
 import type { AgentCalendar, CreatedEvent, N8n } from "./types";
 
@@ -18,12 +19,10 @@ const summary = (method: string, result: unknown): Record<string, unknown> => {
 };
 
 const stub = traced("n8n", stubN8n, summary);
+const live = traced("n8n", liveN8n, summary);
 
 export function n8n(): N8n {
-  if (serverEnv().N8N_MODE === "live") {
-    throw new Error("The live n8n integration arrives with HITECH-31");
-  }
-  return stub;
+  return serverEnv().N8N_MODE === "live" ? live : stub;
 }
 
 export * from "./types";

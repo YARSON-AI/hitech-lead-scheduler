@@ -45,6 +45,7 @@ export interface BookingPayload {
   inPersonAddress?: string;
   forced: boolean;
   source: "staff" | "link";
+  bookedByEmail?: string;
   outlookEventId?: string;
   surenseMeetingId?: string;
 }

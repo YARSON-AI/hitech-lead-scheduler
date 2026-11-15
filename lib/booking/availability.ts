@@ -3,7 +3,7 @@ import { traceStep } from "@/lib/trace";
 import { freeSlots, publicSlots, unionSlots, type AgentAvailability, type BusyBlock, type EngineContext, type Holiday, type MeetingSettings, type WeeklyHours, type DateOverride } from "@/lib/engine/availability";
 import { addDays, fromWall, todayInJerusalem } from "@/lib/engine/time";
 import type { RosterAgent } from "@/lib/integrations/airtable/types";
-import { n8n, type CalendarEvent } from "@/lib/integrations/n8n";
+import { n8n, type AgentCalendar, type CalendarEvent } from "@/lib/integrations/n8n";
 import { ApiError } from "@/lib/http/route";
 import { adminClient } from "@/lib/supabase/admin";
 
@@ -38,18 +38,27 @@ export async function loadHolidays(from: string, to: string): Promise<Map<string
   );
 }
 
-async function trackConnections(calendars: { agentEmail: string; readable: boolean }[], names: Map<string, string>) {
+export async function readConfirmed(
+  read: (emails: string[]) => Promise<AgentCalendar[]>,
+  emails: string[],
+  wasConnected: Map<string, boolean>,
+): Promise<AgentCalendar[]> {
+  const first = await read(emails);
+  const doubtful = first.filter((calendar) => !calendar.readable && (wasConnected.get(calendar.agentEmail) ?? true)).map((calendar) => calendar.agentEmail);
+  if (doubtful.length === 0) return first;
+  const second = new Map((await read(doubtful)).map((calendar) => [calendar.agentEmail, calendar]));
+  return first.map((calendar) => second.get(calendar.agentEmail) ?? calendar);
+}
+
+async function trackConnections(calendars: { agentEmail: string; readable: boolean }[], wasConnected: Map<string, boolean>, names: Map<string, string>) {
   const db = adminClient();
-  const emails = calendars.map((calendar) => calendar.agentEmail);
-  const { data: known } = await db.from("calendar_connections").select("agent_email, connected").in("agent_email", emails);
-  const wasConnected = new Map((known ?? []).map((row) => [row.agent_email, row.connected]));
   for (const { agentEmail, readable } of calendars) {
     const before = wasConnected.get(agentEmail) ?? true;
     if (!readable && before) {
       await db.from("calendar_connections").upsert({ agent_email: agentEmail, connected: false, disconnected_at: new Date().toISOString(), updated_at: new Date().toISOString() });
       const agentName = names.get(agentEmail);
       const { error } = await db.from("alerts").insert({ kind: "calendar_unreadable", agent_email: agentEmail, agent_name: agentName });
-      if (!error) await n8n().sendAlertEmail({ kind: "calendar_unreadable", agentName });
+      if (!error) await n8n().sendAlertEmail({ kind: "calendar_unreadable", agentName }).catch(() => traceStep("alert_email_failed", { kind: "calendar_unreadable" }));
     } else if (readable && !before) {
       await db.from("calendar_connections").update({ connected: true, disconnected_at: null, updated_at: new Date().toISOString() }).eq("agent_email", agentEmail);
       await db.from("alerts").update({ resolved_at: new Date().toISOString() }).eq("kind", "calendar_unreadable").eq("agent_email", agentEmail).is("resolved_at", null);
@@ -61,13 +70,15 @@ export async function loadAgents(roster: RosterAgent[], from: string, to: string
   if (roster.length === 0) return [];
   const db = adminClient();
   const emails = roster.map((agent) => agent.email);
+  const { data: known } = await db.from("calendar_connections").select("agent_email, connected").in("agent_email", emails);
+  const wasConnected = new Map<string, boolean>((known ?? []).map((row) => [row.agent_email, row.connected]));
   let calendars;
   try {
-    calendars = await n8n().readCalendars(emails, from, to);
+    calendars = await readConfirmed((list) => n8n().readCalendars(list, from, to), emails, wasConnected);
   } catch {
     throw new ApiError(503, "calendar_read_failed", "לא הצלחנו לטעון את המועדים. נסה/י שוב.");
   }
-  await trackConnections(calendars, new Map(roster.map((agent) => [agent.email, agent.name])));
+  await trackConnections(calendars, wasConnected, new Map(roster.map((agent) => [agent.email, agent.name])));
   const [{ data: hours }, { data: overrides }, { data: bookings }] = await Promise.all([
     db.from("working_hours").select("agent_email, weekday, enabled, start_time, end_time").in("agent_email", emails),
     db.from("date_overrides").select("agent_email, date, kind, start_time, end_time").in("agent_email", emails).gte("date", from).lte("date", to),

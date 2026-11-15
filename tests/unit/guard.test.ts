@@ -23,6 +23,8 @@ describe("environment guard", () => {
     expect(environmentProblems({ ...dev, AIRTABLE_MODE: "live" })).not.toEqual([]);
     expect(environmentProblems({ ...dev, AIRTABLE_API_TOKEN: "x" })).not.toEqual([]);
     expect(environmentProblems({ ...dev, CALCOM_API_KEY: "x" })).not.toEqual([]);
+    expect(environmentProblems({ ...dev, N8N_GATEWAY_URL: "https://n8n.example.test/webhook/x" })).not.toEqual([]);
+    expect(environmentProblems({ ...dev, N8N_GATEWAY_SECRET: "x" })).not.toEqual([]);
   });
 
   it("only a real Vercel production deployment is exempt", () => {

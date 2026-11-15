@@ -4,10 +4,12 @@ import { ApiError, hitRateLimit, notFound } from "@/lib/http/route";
 import { airtable } from "@/lib/integrations/airtable";
 import { n8n } from "@/lib/integrations/n8n";
 import { adminClient } from "@/lib/supabase/admin";
-import { agentById, raiseAlert, recordEvent, toPayload } from "./core";
+import { traceStep } from "@/lib/trace";
+import { agentById, raiseAlert, recordEvent, refuseWithoutWorkflow, toPayload } from "./core";
 import type { BookingRow } from "./types";
 
 export async function sendCalendarLink(actor: Actor, agentId: string): Promise<void> {
+  refuseWithoutWorkflow();
   const agent = await agentById(agentId);
   if (!agent) throw notFound();
   if (!(await hitRateLimit(`calendar-link:${agent.email}`, 3, 3600))) {
@@ -21,6 +23,7 @@ export async function sendCalendarLink(actor: Actor, agentId: string): Promise<v
 }
 
 export async function changeAgentEmail(actor: Actor, agentId: string, newEmail: string): Promise<void> {
+  refuseWithoutWorkflow();
   const agent = await agentById(agentId);
   if (!agent) throw notFound();
   if (newEmail === agent.email) throw new ApiError(400, "same_email", "זה המייל הנוכחי");
@@ -52,7 +55,7 @@ export async function changeAgentEmail(actor: Actor, agentId: string, newEmail: 
     previousEmail: agent.email,
     newEmail,
     agentName: agent.name,
-    futureBookings: bookings.map((row) => ({ ...toPayload(row), agentEmail: newEmail })),
+    futureBookings: await Promise.all(bookings.map(async (row) => ({ ...(await toPayload(row)), agentEmail: newEmail }))),
   });
   for (const [index, row] of bookings.entries()) {
     const event = created[index];
@@ -65,6 +68,6 @@ export async function changeAgentEmail(actor: Actor, agentId: string, newEmail: 
   }
 
   await db.from("alerts").insert({ kind: "calendar_unreadable", agent_email: newEmail, agent_name: agent.name });
-  await n8n().sendAlertEmail({ kind: "calendar_unreadable", agentName: agent.name });
+  await n8n().sendAlertEmail({ kind: "calendar_unreadable", agentName: agent.name }).catch(() => traceStep("alert_email_failed", { kind: "calendar_unreadable" }));
   await db.from("account_events").insert({ target_email: newEmail, action: "agent_email_changed", actor_user: actor.id, actor_name: actor.name, details: { from: agent.email } });
 }
