@@ -8,6 +8,7 @@ const CALCOM_API_KEY = process.env.CALCOM_API_KEY;
 const CALCOM_TEAM_ID = process.env.CALCOM_TEAM_ID;
 
 const FORBIDDEN_TRAFFIC_LIGHT_STATUS = "🔴";
+const PILOT_FIELD = "פיילוט";
 const EVEN_DISTRIBUTION_GAP_THRESHOLD = Number(process.env.EVEN_DISTRIBUTION_GAP_THRESHOLD) || 6;
 const MIN_AVAILABLE_HOSTS = 10;
 const MEMBERSHIPS_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
@@ -268,6 +269,7 @@ export async function GET(request: NextRequest) {
       .map((record) => ({ record, userId: calcomEmailToUserId.get(record.fields["מייל"]?.toLowerCase() ?? "") }))
       .filter((r): r is RecordWithUserId => {
         if (r.userId === undefined) return false;
+        if (r.record.fields[PILOT_FIELD] === true) return false;
         if (bypassFilters) return true; // Spouse mode - return all agents with userId
         if (isManualMode) return !(specialization && r.record.fields[specialization] === true);
         return (
