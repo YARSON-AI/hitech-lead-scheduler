@@ -1,5 +1,6 @@
 import "server-only";
 import { AsyncLocalStorage } from "node:async_hooks";
+import { after } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
 
 interface Trace {
@@ -25,7 +26,7 @@ export function traceIds(ids: { bookingId?: string; linkId?: string }): void {
   trace.linkId ??= ids.linkId ?? null;
 }
 
-async function save(trace: Trace, ok: boolean, status: number): Promise<void> {
+async function save(trace: Trace, ok: boolean, status: number, durationMs: number): Promise<void> {
   try {
     const { error } = await adminClient()
       .from("booking_traces")
@@ -36,7 +37,7 @@ async function save(trace: Trace, ok: boolean, status: number): Promise<void> {
         link_id: trace.linkId,
         ok,
         status,
-        duration_ms: Date.now() - trace.started,
+        duration_ms: durationMs,
         steps: trace.steps,
       });
     if (error) throw error;
@@ -49,12 +50,14 @@ export async function withTrace<T>(action: string, actorRole: string | null, run
   const trace: Trace = { action, actorRole, started: Date.now(), bookingId: null, linkId: null, steps: [] };
   try {
     const result = await store.run(trace, run);
-    await save(trace, true, 200);
+    const durationMs = Date.now() - trace.started;
+    after(() => save(trace, true, 200, durationMs));
     return result;
   } catch (error) {
     const status = (error as { status?: number }).status ?? 500;
     trace.steps.push({ ms: Date.now() - trace.started, step: "failed", code: (error as { code?: string }).code ?? (error as Error)?.name, message: (error as Error)?.message });
-    await save(trace, false, status);
+    const durationMs = Date.now() - trace.started;
+    after(() => save(trace, false, status, durationMs));
     throw error;
   }
 }

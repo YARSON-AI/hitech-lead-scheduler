@@ -131,6 +131,7 @@ export function AgentMeetingDetailScreen({ booking }: { booking: BookingRow }) {
     dPhone: booking.customer_phone ?? "—",
     dKind: onsite ? `פגישה פרונטלית ● ${booking.in_person_address}` : "פגישה מרחוק",
     dTopic: booking.interest_name ?? "—",
+    dNote: booking.notes,
     teamsFull: onsite ? null : <TeamsLink url={booking.teams_join_url} state={teamsState(booking)} variant="full" />,
     agDCx: !active,
     agDCxBy: CANCELLED_BY[booking.cancelled_by ?? ""] ?? "—",

@@ -18,6 +18,7 @@ export interface BookingRow {
   additional_customer_email: string | null;
   additional_customer_phone: string | null;
   in_person_address: string | null;
+  notes: string | null;
   spouse_booking_id: string | null;
   forced: boolean;
   source: "staff" | "link";

@@ -47,8 +47,7 @@ export interface CreateLinkInput {
 
 export async function createLink(actor: Actor, input: CreateLinkInput, origin: string) {
   const db = adminClient();
-  const lead = await validateLead(input.leadNumber);
-  const roster = await airtable().listAgents();
+  const [lead, roster] = await Promise.all([validateLead(input.leadNumber), airtable().listAgents()]);
 
   let agent = null;
   if (actor.role === "agent") {

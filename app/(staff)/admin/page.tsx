@@ -5,7 +5,7 @@ import { STAFF } from "@/lib/auth/types";
 import type { BookingRow } from "@/lib/booking/types";
 import { addDays } from "@/lib/engine/time";
 import { fromWall } from "@/lib/engine/time";
-import { airtable } from "@/lib/integrations/airtable";
+import { agentDirectory } from "@/lib/integrations/airtable";
 import { serverClient } from "@/lib/supabase/server";
 
 type Search = { range?: string; q?: string; agent?: string; from?: string; to?: string };
@@ -32,15 +32,15 @@ export default async function BookingsPage({ searchParams }: { searchParams: Pro
   const to = validDate(params.to);
   if (from) query = query.gte("start_at", fromWall(from, "00:00").toISOString());
   if (to) query = query.lt("start_at", fromWall(addDays(to, 1), "00:00").toISOString());
-  const { data } = await query.order("start_at", { ascending: range === "upcoming" });
 
   const count = async (build: (base: ReturnType<typeof baseCount>) => ReturnType<typeof baseCount>) => (await build(baseCount())).count ?? 0;
   const baseCount = () => supabase.from("bookings").select("id", { count: "exact", head: true });
-  const [upcoming, past, cancelled, roster] = await Promise.all([
+  const [{ data }, upcoming, past, cancelled, roster] = await Promise.all([
+    query.order("start_at", { ascending: range === "upcoming" }),
     count((base) => base.eq("status", "confirmed").gte("end_at", now)),
     count((base) => base.eq("status", "confirmed").lt("end_at", now)),
     count((base) => base.eq("status", "cancelled")),
-    airtable().listAgents(),
+    agentDirectory(),
   ]);
 
   return (

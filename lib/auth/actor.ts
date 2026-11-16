@@ -6,24 +6,27 @@ import { homeFor, type Actor, type Role } from "./types";
 
 export const currentActor = cache(async (): Promise<Actor | null> => {
   const supabase = await serverClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("email, full_name, role, agent_email, status")
-    .eq("id", user.id)
-    .maybeSingle();
+  const { data: verified } = await supabase.auth.getClaims();
+  const claims = verified?.claims;
+  if (!claims) return null;
+  const [
+    {
+      data: { user },
+    },
+    { data: profile },
+  ] = await Promise.all([
+    supabase.auth.getUser(),
+    supabase.from("profiles").select("email, full_name, role, agent_email, status").eq("id", claims.sub).maybeSingle(),
+  ]);
+  if (!user || user.id !== claims.sub) return null;
   if (!profile || profile.status !== "active" || profile.role !== user.app_metadata?.role) return null;
-  const { data: level } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
   return {
     id: user.id,
     email: profile.email,
     name: profile.full_name,
     role: profile.role,
     agentEmail: profile.agent_email,
-    aal: level?.currentLevel === "aal2" ? "aal2" : "aal1",
+    aal: claims.aal === "aal2" ? "aal2" : "aal1",
   };
 });
 

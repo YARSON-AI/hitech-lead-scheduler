@@ -1,6 +1,6 @@
 import "server-only";
 import { createHash, randomBytes } from "node:crypto";
-import { airtable } from "@/lib/integrations/airtable";
+import { agentDirectory, airtable } from "@/lib/integrations/airtable";
 import { n8n } from "@/lib/integrations/n8n";
 import { adminClient } from "@/lib/supabase/admin";
 import { ApiError, notFound } from "@/lib/http/route";
@@ -26,7 +26,7 @@ export interface UserRow {
 export async function listUsers(actor: Actor): Promise<UserRow[]> {
   const [{ data: profiles, error }, roster] = await Promise.all([
     adminClient().from("profiles").select("id, email, full_name, role, agent_email, status"),
-    airtable().listAgents(),
+    agentDirectory(),
   ]);
   if (error) throw error;
   const byEmail = new Map((profiles ?? []).map((profile) => [profile.email, profile]));
@@ -118,8 +118,7 @@ export async function inviteAgent(actor: Actor, rosterId: string, origin: string
   return { id: userId, userId, name: agent.name, email: agent.email, kind: "agent", status: "invited", self: false };
 }
 
-export async function inviteCoordinator(actor: Actor, email: string, origin: string): Promise<UserRow> {
-  const name = email.split("@")[0];
+export async function inviteCoordinator(actor: Actor, email: string, name: string, origin: string): Promise<UserRow> {
   const userId = await createAccount(email, "coordinator", name, null, actor);
   await issueLink(actor, userId, email, name, origin, "invite");
   return { id: userId, userId, name, email, kind: "coordinator", status: "invited", self: false };

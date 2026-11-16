@@ -12,6 +12,7 @@ export function AddCoordOpen1({ v }: { v: VM }) {
     <>
       <Dialog open={v.addCoordOpen} onClose={v.closeAddCoord} title="הוספת מתאמת" footer={v.addCoordFooter} {...v.dialogProps}>
         <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          <TextInput label="שם*" value={v.addCoordName} onChange={v.onAddCoordName} error={v.addCoordNameErr} autoFocus={true} />
           <TextInput label="מייל*" placeholder="name@example.com" value={v.addCoordEmail} onChange={v.onAddCoordEmail} error={v.addCoordErr} dir="ltr" />
           <Alert {...v.alertProps} tone="info">
             המתאמת תקבל מייל עם קישור להגדרת סיסמה.

@@ -38,7 +38,8 @@ export function AgentMeetingDetailView({ v }: { v: VM }) {
               <SummaryItem label="מספר ליד" value={v.dLead} ltr={true} />
               <SummaryItem label="טלפון" value={v.dPhone} ltr={true} />
               <SummaryItem label="סוג פגישה" value={v.dKind} />
-              <SummaryItem label="סוג ליד" value={v.dTopic} last={true} />
+              <SummaryItem label="סוג ליד" value={v.dTopic} last={!v.dNote} />
+              {v.dNote && <SummaryItem label="הערה" value={v.dNote} last={true} />}
             </Card>
             {v.agDCx && (
               <Card tone="subtle" padding="sm" style={css(v.summaryBox)}>

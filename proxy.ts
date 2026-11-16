@@ -70,9 +70,8 @@ export async function proxy(request: NextRequest) {
     },
   });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data } = await supabase.auth.getClaims();
+  const claims = data?.claims;
 
   const redirect = (to: string) => {
     const target = NextResponse.redirect(new URL(to, request.url));
@@ -81,7 +80,7 @@ export async function proxy(request: NextRequest) {
   };
   const done = () => secured(response, path, csp);
 
-  if (!user) {
+  if (!claims) {
     if (LOGIN.test(path)) return done();
     if (path.startsWith("/api/")) {
       return secured(NextResponse.json({ error: "unauthenticated", message: "יש להתחבר מחדש" }, { status: 401 }), path, csp);
@@ -89,13 +88,12 @@ export async function proxy(request: NextRequest) {
     return redirect("/login");
   }
 
-  const role = user.app_metadata?.role as Role | undefined;
+  const role = claims.app_metadata?.role as Role | undefined;
   if (path.startsWith("/api/")) return done();
   if (!role) return LOGIN.test(path) ? done() : redirect("/login");
 
   if (role === "manager") {
-    const { data: level } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-    const secondStepDone = level?.currentLevel === "aal2";
+    const secondStepDone = claims.aal === "aal2";
     if (!secondStepDone && !TWO_STEP.test(path) && !LOGIN.test(path)) return redirect("/login/two-step");
     if (secondStepDone && TWO_STEP.test(path)) return redirect(homeFor(role));
   } else if (TWO_STEP.test(path)) {
@@ -109,5 +107,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|brand/).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|icon.png|apple-icon.png|brand/).*)"],
 };

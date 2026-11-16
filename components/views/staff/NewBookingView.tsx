@@ -97,6 +97,7 @@ export function NewBookingView({ v }: { v: VM }) {
                     </>
                   )}
                   {v.showPair && v.spPairBlock}
+                  {v.attachNote && v.noteField}
                   {v.pairErr && <Alert {...v.alertProps} tone="error">{v.pairErr}</Alert>}
                   {!v.newSpouse && <RadioGroup options={v.assignOptions} value={v.newAssign} onChange={v.onNewAssign} />}
                   {v.newManual && (
@@ -196,6 +197,7 @@ export function NewBookingView({ v }: { v: VM }) {
                           <input type="time" value={v.forceTime} onChange={v.onForceTime} dir="ltr" style={{ height: "44px", border: "2px solid var(--border-default)", borderRadius: "var(--radius-control)", padding: "0 var(--pad-input-x)", font: "var(--type-body)", fontFamily: "var(--font-body)", color: "var(--text-primary)", background: "var(--surface-card)", width: "100%" }} />
                         </div>
                       </div>
+                      {v.noteField}
                       {v.forceErr && <Alert tone="error">{v.forceErr}</Alert>}
                       <div style={{ display: "flex", gap: "12px", paddingTop: "4px" }}>
                         <div style={{ flex: "1", minWidth: "0", display: "flex" }}>
@@ -287,7 +289,10 @@ export function NewBookingView({ v }: { v: VM }) {
                           </div>
                         </div>
                       </div>
-                      <div style={{ display: "flex", gap: "12px", marginTop: "24px", paddingTop: "20px", borderTop: "1px solid var(--border-subtle)" }}>
+                      <div style={{ marginTop: "24px", paddingTop: "20px", borderTop: "1px solid var(--border-subtle)" }}>
+                        {v.noteField}
+                      </div>
+                      <div style={{ display: "flex", gap: "12px", marginTop: "20px" }}>
                         <div style={{ flex: "1", minWidth: "0", display: "flex" }}>
                           <Button variant="outline" size="lg" fullWidth={true} iconStart="arrow-right" onClick={v.newBack}>
                             חזרה

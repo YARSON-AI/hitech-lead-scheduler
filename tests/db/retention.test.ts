@@ -13,6 +13,7 @@ const booking = (daysAgo: number, name: string) => {
     customer_name: name,
     customer_email: "customer@example.test",
     customer_phone: "0500000000",
+    notes: "synthetic note",
     assignment_mode: "auto",
   };
 };
@@ -31,9 +32,10 @@ describe("retention job", () => {
     await db.from("booking_events").insert({ booking_id: old.id, action: "created", actor_role: "system", after: { email: "customer@example.test" } });
     const { error } = await db.rpc("run_retention");
     expect(error).toBeNull();
-    const { data: rows } = await db.from("bookings").select("id, customer_name, customer_email, anonymised_at, lead_number").in("id", [old.id, newer.id]);
+    const { data: rows } = await db.from("bookings").select("id, customer_name, customer_email, notes, anonymised_at, lead_number").in("id", [old.id, newer.id]);
     const after = rows!.find((row) => row.id === old.id)!;
     expect(after.customer_email).toBeNull();
+    expect(after.notes).toBeNull();
     expect(after.customer_name).not.toBe("old");
     expect(after.anonymised_at).not.toBeNull();
     expect(after.lead_number).toBe("retention");

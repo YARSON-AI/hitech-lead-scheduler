@@ -113,7 +113,8 @@ test("a manager adds a coordinator by email", async ({ page, browser }) => {
   await page.goto("/admin/users");
   const staleCoord = linkInOutbox(NEW_COORD);
   await page.locator("main").locator("button").first().click();
-  await page.getByRole("dialog").locator("input").fill(NEW_COORD);
+  await page.getByRole("dialog").locator("input").nth(0).fill("E2E Coordinator");
+  await page.getByRole("dialog").locator("input").nth(1).fill(NEW_COORD);
   await page.getByRole("dialog").getByRole("button", { name: "שליחת הזמנה" }).click();
   await expect(page.locator("tr", { hasText: NEW_COORD })).toBeVisible();
 

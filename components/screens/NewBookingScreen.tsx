@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { DateField } from "@/components/views/pickers";
 import { NewBookingView } from "@/components/views/staff/NewBookingView";
+import { NoteField } from "@/components/views/staff/NoteField";
 import { SpousePairBlock } from "@/components/views/staff/SpousePairBlock";
 import { TeamsLink } from "@/components/views/TeamsLink";
 import { api, ApiFailure } from "@/lib/client/api";
@@ -48,6 +49,7 @@ export function NewBookingScreen({ specializations }: { specializations: Option[
   const [spouseLead, setSpouseLead] = useState("");
   const [inPerson, setInPerson] = useState(false);
   const [address, setAddress] = useState("");
+  const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [step1Err, setStep1Err] = useState("");
   const [lead, setLead] = useState<{ name: string; number: string } | null>(null);
@@ -80,6 +82,8 @@ export function NewBookingScreen({ specializations }: { specializations: Option[
     specialization: mode === "manual" && spec ? spec : undefined,
     spouseLeadNumber: mode === "spouse" ? spouseLead.trim() : undefined,
   });
+
+  const details = () => ({ address: inPerson ? address.trim() : undefined, notes: note.trim() || undefined });
 
   const picker = useSlotPicker(
     pickerOn
@@ -125,7 +129,7 @@ export function NewBookingScreen({ specializations }: { specializations: Option[
     setBusy(true);
     setPairErr("");
     try {
-      const result = await api<Done>("/api/app/bookings", { ...assignment(), address: inPerson ? address.trim() : undefined, date: attachChoice.date, time: attachChoice.time, forced: false });
+      const result = await api<Done>("/api/app/bookings", { ...assignment(), ...details(), date: attachChoice.date, time: attachChoice.time, forced: false });
       setDone(result);
       setStep(4);
       router.refresh();
@@ -163,7 +167,7 @@ export function NewBookingScreen({ specializations }: { specializations: Option[
     setConfirmBusy(true);
     setForceErr("");
     try {
-      const result = await api<Done>("/api/app/bookings", { ...assignment(), address: inPerson ? address.trim() : undefined, date, time, forced });
+      const result = await api<Done>("/api/app/bookings", { ...assignment(), ...details(), date, time, forced });
       setDone(result);
       setStep(4);
       router.refresh();
@@ -188,6 +192,7 @@ export function NewBookingScreen({ specializations }: { specializations: Option[
     setSpouseLead("");
     setInPerson(false);
     setAddress("");
+    setNote("");
     setAssign("auto");
     setAgent("");
     setSpec("");
@@ -216,6 +221,7 @@ export function NewBookingScreen({ specializations }: { specializations: Option[
         { label: "לקוח/ה", value: `${done.customerName} - ${done.leadNumber}`, dir: "rtl" },
         { label: "תאריך ושעה", value: `${fmtRange(done.start, done.end)} ● ${fmtDate(done.start)}`, dir: "ltr" },
         { label: done.address ? "כתובת" : "מיקום", value: done.address ?? "פגישה מרחוק", dir: "rtl" },
+        ...(note.trim() ? [{ label: "הערה", value: note.trim(), dir: "rtl" }] : []),
         ...(done.address ? [] : [{ label: "קישור Teams", value: <TeamsLink url={done.teamsJoinUrl} state={done.teamsJoinUrl ? "ready" : "missing"} variant="inline" />, dir: "rtl" }]),
       ].map((row, index, rows) => ({ ...row, rowStyle: factRow(index === rows.length - 1) }))
     : [];
@@ -297,6 +303,8 @@ export function NewBookingScreen({ specializations }: { specializations: Option[
     step2Disabled: (mode === "manual" && !agent) || (!!partner && spouseOn && pairMode === "attach" && !attachChoice) || busy,
     showPair: spouseOn && !!partner,
     pairErr,
+    noteField: <NoteField value={note} onChange={setNote} />,
+    attachNote: !!attachChoice,
     spPairBlock: partner ? (
       <SpousePairBlock
         customerName={partner.customerName}

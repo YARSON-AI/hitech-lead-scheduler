@@ -10,8 +10,10 @@ export default async function BookingPage({ params }: { params: Promise<{ id: st
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/.test(id)) notFound();
   const supabase = await serverClient();
-  const { data } = await supabase.from("bookings").select("*").eq("id", id).neq("status", "failed").maybeSingle();
+  const [{ data }, { data: events }] = await Promise.all([
+    supabase.from("bookings").select("*").eq("id", id).neq("status", "failed").maybeSingle(),
+    supabase.from("booking_events").select("*").eq("booking_id", id).order("created_at"),
+  ]);
   if (!data) notFound();
-  const { data: events } = await supabase.from("booking_events").select("*").eq("booking_id", id).order("created_at");
   return <BookingDetailScreen booking={data as BookingRow} events={(events ?? []) as BookingEvent[]} />;
 }

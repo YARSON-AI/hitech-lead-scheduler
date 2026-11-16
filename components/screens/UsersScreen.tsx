@@ -28,6 +28,8 @@ export function UsersScreen({ rows }: { rows: UserRow[] }) {
   const [tab, setTab] = useState("all");
   const [addOpen, setAddOpen] = useState(false);
   const [addEmail, setAddEmail] = useState("");
+  const [addName, setAddName] = useState("");
+  const [addNameError, setAddNameError] = useState("");
   const [addError, setAddError] = useState("");
   const [deactivating, setDeactivating] = useState<UserRow | null>(null);
   const [busy, setBusy] = useState(false);
@@ -48,12 +50,15 @@ export function UsersScreen({ rows }: { rows: UserRow[] }) {
 
   async function addCoordinator() {
     const email = addEmail.trim();
+    const name = addName.trim();
+    if (name.length < 2) return setAddNameError("יש להזין שם");
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return setAddError("יש להזין כתובת מייל תקינה");
     setBusy(true);
     try {
-      await api("/api/app/users/coordinator", { email });
+      await api("/api/app/users/coordinator", { email, name });
       setAddOpen(false);
       setAddEmail("");
+      setAddName("");
       setTab("all");
       toast("ההזמנה נשלחה", `${email} קיבל/ה קישור להגדרת סיסמה.`);
       router.refresh();
@@ -108,6 +113,7 @@ export function UsersScreen({ rows }: { rows: UserRow[] }) {
     openAddCoord: () => {
       setAddOpen(true);
       setAddError("");
+      setAddNameError("");
     },
     usersHasTabs: rows.length > 0,
     usersTabs: [
@@ -137,6 +143,12 @@ export function UsersScreen({ rows }: { rows: UserRow[] }) {
       setAddError("");
     },
     addCoordErr: addError,
+    addCoordName: addName,
+    onAddCoordName: (event: { target: { value: string } }) => {
+      setAddName(event.target.value);
+      setAddNameError("");
+    },
+    addCoordNameErr: addNameError,
     addCoordFooter: (
       <div style={{ display: "flex", gap: 12 }}>
         <Button size="md" iconStart="mail" loading={busy} onClick={addCoordinator}>

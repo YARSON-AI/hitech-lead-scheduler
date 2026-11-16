@@ -13,7 +13,7 @@ async function firstSlot(page: Page, body: object) {
   return { date, time: slots[date][0], slots };
 }
 
-async function bookThroughScreen(page: Page, lead: string) {
+async function bookThroughScreen(page: Page, lead: string, note?: string) {
   await page.goto("/");
   await page.locator("input").first().fill(lead);
   await page.getByRole("button", { name: "המשך" }).click();
@@ -21,6 +21,7 @@ async function bookThroughScreen(page: Page, lead: string) {
   const time = page.getByRole("button", { name: /^\d\d:\d\d$/ }).first();
   await expect(time).toBeVisible({ timeout: 20000 });
   await time.click();
+  if (note) await page.locator("textarea").fill(note);
   await page.getByRole("button", { name: /אישור מועד/ }).click();
   await expect(page.getByRole("heading", { level: 2 })).toBeVisible({ timeout: 20000 });
 }
@@ -32,7 +33,7 @@ test.beforeEach(async ({ page }) => {
 test("a coordinator books a lead end to end on the stub", async ({ page }) => {
   const lead = "10013";
   await admin().from("bookings").update({ status: "cancelled" }).eq("lead_number", lead).eq("status", "confirmed");
-  await bookThroughScreen(page, lead);
+  await bookThroughScreen(page, lead, "e2e note");
   const { data } = await admin().from("bookings").select("*").eq("lead_number", lead).eq("status", "confirmed").single();
   expect(data.assignment_mode).toBe("auto");
   expect(data.outlook_event_id).toBeTruthy();
@@ -40,6 +41,8 @@ test("a coordinator books a lead end to end on the stub", async ({ page }) => {
   const sent = outbox().filter((entry) => entry.event === "booking.created" && entry.payload.bookingId === data.id);
   expect(sent).toHaveLength(1);
   expect(sent[0].payload.customerEmail).toBe(`customer10013@${D}`);
+  expect(sent[0].payload.notes).toBe("e2e note");
+  expect(data.notes).toBe("e2e note");
   const { data: events } = await admin().from("booking_events").select("action, actor_role").eq("booking_id", data.id);
   expect(events).toContainEqual({ action: "created", actor_role: "coordinator" });
 });

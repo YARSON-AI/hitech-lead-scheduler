@@ -68,7 +68,7 @@ export interface N8n {
   validateLeads(numbers: string[]): Promise<ValidatedLead[]>;
   spouseAgent(leadId: string): Promise<{ agentEmail: string } | null>;
   readCalendars(agentEmails: string[], from: string, to: string): Promise<AgentCalendar[]>;
-  bookingCreated(payload: BookingPayload): Promise<CreatedEvent>;
+  bookingCreated(payload: BookingPayload & { notes?: string; bookedByName?: string }): Promise<CreatedEvent>;
   bookingRescheduled(payload: BookingPayload & { previousStart: string }): Promise<void>;
   bookingCancelled(payload: BookingPayload & { cancelledBy: CancelledBy; tag: string; reason?: string }): Promise<void>;
   bookingTransferred(payload: BookingPayload & { previousAgentEmail: string; previousOutlookEventId?: string }): Promise<CreatedEvent>;

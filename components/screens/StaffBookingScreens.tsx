@@ -272,6 +272,7 @@ export function BookingDetailScreen({ booking, events }: { booking: BookingRow; 
         ]
       : []),
     ["מקום", booking.in_person_address ?? "מרחוק", "rtl"],
+    ...(booking.notes ? [["הערה", booking.notes, "rtl"]] : []),
     ["נקבעה על ידי", `${booking.booked_by_name ?? (booking.source === "link" ? "לקוח/ה בקישור" : "—")} ● ${fmtDate(booking.created_at)}`, "rtl"],
     ...(booking.status === "cancelled"
       ? [["בוטלה על ידי", `${booking.cancelled_by_name ?? "—"} ● ${CANCEL_LABEL[booking.cancelled_by ?? ""] ?? ""}${booking.cancel_reason ? ` ● ${booking.cancel_reason}` : ""}`, "rtl"]]

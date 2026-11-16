@@ -1,7 +1,7 @@
 import { AlertsScreen } from "@/components/screens/StaffBookingScreens";
 import { requirePage } from "@/lib/auth/actor";
 import { STAFF } from "@/lib/auth/types";
-import { airtable } from "@/lib/integrations/airtable";
+import { agentDirectory } from "@/lib/integrations/airtable";
 import { serverClient } from "@/lib/supabase/server";
 
 export default async function AlertsPage() {
@@ -9,7 +9,7 @@ export default async function AlertsPage() {
   const supabase = await serverClient();
   const [{ data }, roster] = await Promise.all([
     supabase.from("alerts").select("id, kind, agent_email, agent_name, booking_id, created_at, bookings(customer_name, start_at)").is("resolved_at", null).order("created_at", { ascending: false }),
-    airtable().listAgents(),
+    agentDirectory(),
   ]);
   const ids = new Map(roster.map((agent) => [agent.email, agent.id]));
   return (

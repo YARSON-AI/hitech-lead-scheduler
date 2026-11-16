@@ -75,7 +75,15 @@ export async function toPayload(row: BookingRow): Promise<BookingPayload> {
   };
 }
 
-export async function validateLead(number: string): Promise<ValidatedLead> {
+const LEAD_REUSE_MS = 120_000;
+const recentLeads = new Map<string, { at: number; lead: ValidatedLead }>();
+
+export async function validateLead(number: string, reuseRecent = false): Promise<ValidatedLead> {
+  const recent = recentLeads.get(number);
+  if (reuseRecent && recent && Date.now() - recent.at < LEAD_REUSE_MS) {
+    traceStep("lead", { number, found: true, interest: recent.lead.interestName ?? null, reused: true });
+    return recent.lead;
+  }
   let leads;
   try {
     leads = await n8n().validateLeads([number]);
@@ -85,6 +93,10 @@ export async function validateLead(number: string): Promise<ValidatedLead> {
   const lead = leads.find((row) => row.number === number);
   traceStep("lead", { number, found: !!lead, interest: lead?.interestName ?? null });
   if (!lead) throw new ApiError(404, "lead_not_found", LEAD_ERROR);
+  for (const [key, entry] of recentLeads) {
+    if (Date.now() - entry.at >= LEAD_REUSE_MS) recentLeads.delete(key);
+  }
+  recentLeads.set(number, { at: Date.now(), lead });
   return lead;
 }
 
@@ -123,13 +135,15 @@ export interface AssignmentInput {
   agentId?: string;
   specialization?: string;
   spouseLeadNumber?: string;
+  roster?: RosterAgent[];
+  reuseLeads?: boolean;
 }
 
 export async function resolveAssignment(input: AssignmentInput): Promise<Assignment> {
-  const roster = await airtable().listAgents();
+  const roster = input.roster ?? (await airtable().listAgents());
 
   if (input.mode === "spouse") {
-    const spouseLead = await validateLead(input.spouseLeadNumber ?? "");
+    const spouseLead = await validateLead(input.spouseLeadNumber ?? "", input.reuseLeads);
     const found = await n8n().spouseAgent(spouseLead.id);
     const agent = found && roster.find((row) => row.email === found.agentEmail);
     if (!agent) throw new ApiError(404, "spouse_agent_not_found", "לא נמצא סוכן משויך לליד של בן/בת הזוג");
@@ -234,6 +248,7 @@ export interface CreateInput {
   start: Date;
   forced: boolean;
   address?: string;
+  notes?: string;
   source: "staff" | "link";
   linkId?: string;
   actor: EventActor;
@@ -298,6 +313,7 @@ export async function createBooking(input: CreateInput): Promise<BookingRow> {
     additional_customer_email: spouse?.email,
     additional_customer_phone: spouse?.phone,
     in_person_address: input.address || null,
+    notes: input.notes || null,
     spouse_booking_id: assignment.partner?.id,
     forced,
     source: input.source,
@@ -338,7 +354,12 @@ export async function createBooking(input: CreateInput): Promise<BookingRow> {
   if (forced) await recordEvent(input.actor, row.id, "forced", { after: { start: row.start_at } });
 
   try {
-    const created = await n8n().bookingCreated({ ...(await toPayload(row)), agentPhone: chosen.phone });
+    const created = await n8n().bookingCreated({
+      ...(await toPayload(row)),
+      agentPhone: chosen.phone,
+      notes: row.notes ?? undefined,
+      bookedByName: input.bookedByName ?? undefined,
+    });
     const { data: updated, error } = await db
       .from("bookings")
       .update({
