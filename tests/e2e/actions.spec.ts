@@ -217,3 +217,15 @@ test("changing an agent's email moves their meetings and disconnects the calenda
   await admin().from("calendar_connections").delete().like("agent_email", "yossi%");
   await admin().from("alerts").delete().like("agent_email", "yossi%");
 });
+
+test("a manager can pick a working-hours time on an agent's page", async ({ page }) => {
+  await loginManager(page);
+  await page.goto("/admin/agents/recAgent012");
+  const enabled = page.locator("button.hti-ctl:not([disabled])");
+  if ((await enabled.count()) === 0) await page.locator("button.hti-sw").first().click();
+  const start = enabled.first();
+  const next = (await start.innerText()).trim() === "06:30" ? "07:30" : "06:30";
+  await start.click();
+  await page.locator(".hti-pop").getByRole("button", { name: next, exact: true }).click();
+  await expect(start).toHaveText(next);
+});

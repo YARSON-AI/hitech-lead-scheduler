@@ -43,7 +43,7 @@ export function ExcOpen7({ v }: { v: VM }) {
                     {v.excStartOpen && (
                       <>
                         <div className="hti-pop hti-slots" style={{ position: "absolute", zIndex: "30", top: "100%", insetInlineStart: "0", marginTop: "6px", width: "208px", maxHeight: "200px", overflowY: "auto", background: "#fff", border: "1px solid var(--border-default)", borderRadius: "var(--radius-control)", boxShadow: "var(--shadow-xl)", padding: "8px", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "6px" }}>
-                          {(v.timeOptions ?? []).map((t: VM, index: number) => (
+                          {(v.excTimeOptions ?? []).map((t: VM, index: number) => (
                             <Fragment key={t.key ?? t.id ?? index}>
                               <button type="button" dir="ltr" onClick={t.pick} style={css(t.style)}>
                                 {t.label}
@@ -66,7 +66,7 @@ export function ExcOpen7({ v }: { v: VM }) {
                     {v.excEndOpen && (
                       <>
                         <div className="hti-pop hti-slots" style={{ position: "absolute", zIndex: "30", top: "100%", insetInlineStart: "0", marginTop: "6px", width: "208px", maxHeight: "200px", overflowY: "auto", background: "#fff", border: "1px solid var(--border-default)", borderRadius: "var(--radius-control)", boxShadow: "var(--shadow-xl)", padding: "8px", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "6px" }}>
-                          {(v.timeOptions ?? []).map((t: VM, index: number) => (
+                          {(v.excTimeOptions ?? []).map((t: VM, index: number) => (
                             <Fragment key={t.key ?? t.id ?? index}>
                               <button type="button" dir="ltr" onClick={t.pick} style={css(t.style)}>
                                 {t.label}

@@ -209,7 +209,7 @@ export function useOverrideEditor(agentEmail: string | undefined) {
       excEndStyle: controlStyle(timeOpen === "e"),
       openExcStart: () => setTimeOpen(timeOpen === "s" ? null : "s"),
       openExcEnd: () => setTimeOpen(timeOpen === "e" ? null : "e"),
-      timeOptions: TIME_LIST.map((label) => ({
+      excTimeOptions: TIME_LIST.map((label) => ({
         label,
         style: timeOptionStyle((timeOpen === "s" ? start : end) === label),
         pick: () => {
