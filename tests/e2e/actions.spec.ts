@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { admin, AGENT, COORDINATOR, D, login, loginManager, OTHER_AGENT, outbox, postJson, ORIGIN } from "./helpers";
+import { admin, AGENT, COORDINATOR, D, login, loginManager, OTHER_AGENT, outbox, PASSWORD, postJson, ORIGIN, removeUser } from "./helpers";
 
 test.describe.configure({ mode: "serial" });
 
@@ -228,4 +228,53 @@ test("a manager can pick a working-hours time on an agent's page", async ({ page
   await start.click();
   await page.locator(".hti-pop").getByRole("button", { name: next, exact: true }).click();
   await expect(start).toHaveText(next);
+});
+
+test("a coordinator can change and cancel a meeting another coordinator booked", async ({ page }) => {
+  const second = `e2e-second-coordinator@${D}`;
+  await removeUser(second);
+  const { data: created } = await admin().auth.admin.createUser({ email: second, password: PASSWORD, email_confirm: true, app_metadata: { role: "coordinator" } });
+  await admin().from("profiles").insert({ id: created.user!.id, email: second, role: "coordinator", full_name: "E2E Second", status: "active" });
+
+  await login(page, COORDINATOR);
+  const id = await bookManual(page, "10017");
+  await page.context().clearCookies();
+
+  await login(page, second);
+  expect((await page.goto(`/admin/bookings/${id}`))!.status()).toBe(200);
+  const { slots } = await (await postJson(page, `/api/app/bookings/${id}/slots`, {})).json();
+  const date = Object.keys(slots).sort().pop()!;
+  expect((await postJson(page, `/api/app/bookings/${id}/reschedule`, { date, time: slots[date][0], forced: false })).status()).toBe(200);
+  expect((await postJson(page, `/api/app/bookings/${id}/cancel`, { cancelledBy: "coordinator", reason: "e2e" })).status()).toBe(200);
+  expect((await row(id)).status).toBe("cancelled");
+  const { data: events } = await admin().from("booking_events").select("action, actor_user").eq("booking_id", id);
+  const actors = new Set((events ?? []).map((event) => event.actor_user));
+  expect(actors.size).toBe(2);
+  await removeUser(second);
+});
+
+test("an agent finds a meeting whose time has passed and can still move it", async ({ page }) => {
+  await login(page, COORDINATOR);
+  const id = await bookManual(page, "10017", "recAgent001");
+  const booked = await row(id);
+  const week = 7 * 86400000;
+  const back = (Math.ceil((new Date(booked.start_at).getTime() - Date.now()) / week) + 1) * week;
+  const shifted = (iso: string) => new Date(new Date(iso).getTime() - back).toISOString();
+  await admin().from("bookings").update({ start_at: shifted(booked.start_at), end_at: shifted(booked.end_at) }).eq("id", id);
+  await page.context().clearCookies();
+
+  await login(page, AGENT);
+  await page.goto("/agent");
+  await page.getByRole("tab", { name: /עברו/ }).click();
+  await expect(page).toHaveURL(/tab=past/);
+  await page.getByText(booked.customer_name).first().click();
+  await page.waitForURL(`**/agent/meetings/${id}`);
+  await page.getByRole("button", { name: "שינוי מועד" }).click();
+  await page.waitForURL(`**/agent/meetings/${id}/reschedule`);
+
+  const { slots } = await (await postJson(page, `/api/app/bookings/${id}/slots`, {})).json();
+  const date = Object.keys(slots).sort()[0];
+  expect((await postJson(page, `/api/app/bookings/${id}/reschedule`, { date, time: slots[date][0], forced: false })).status()).toBe(200);
+  expect(new Date((await row(id)).start_at).getTime()).toBeGreaterThan(Date.now());
+  await admin().from("bookings").update({ status: "cancelled" }).eq("id", id);
 });

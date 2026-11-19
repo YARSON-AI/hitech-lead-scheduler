@@ -26,14 +26,18 @@ const dayNumber = (iso: string) => new Intl.DateTimeFormat("he-IL", { timeZone: 
 
 const CANCELLED_BY: Record<string, string> = { customer: "לקוח/ה", agent: "סוכן/ת", coordinator: "מתאמת" };
 const cancelledWhen = (row: BookingRow) => (row.cancelled_at ? `${fmtDate(row.cancelled_at)} ${fmtTime(row.cancelled_at)}` : "—");
+const hasEnded = (row: BookingRow) => new Date(row.end_at).getTime() < Date.now();
 
-export function AgentMeetingsScreen({ meetings, cancelled, initialTab }: { meetings: BookingRow[]; cancelled: BookingRow[]; initialTab: "upcoming" | "cancelled" }) {
+type MeetingsTab = "upcoming" | "past" | "cancelled";
+
+export function AgentMeetingsScreen({ meetings, past, cancelled, initialTab }: { meetings: BookingRow[]; past: BookingRow[]; cancelled: BookingRow[]; initialTab: MeetingsTab }) {
   const router = useRouter();
   const [tab, setTab] = useState(initialTab);
   const showCancelled = tab === "cancelled";
-  const agMeetings = (showCancelled ? cancelled : meetings).map((row) => {
+  const showPast = tab === "past";
+  const agMeetings = (showCancelled ? cancelled : showPast ? past : meetings).map((row) => {
     const onsite = !!row.in_person_address;
-    const join = onsite || showCancelled ? null : <TeamsLink url={row.teams_join_url} state={teamsState(row)} variant="join" />;
+    const join = onsite || showCancelled || showPast ? null : <TeamsLink url={row.teams_join_url} state={teamsState(row)} variant="join" />;
     const cxLink = showCancelled && !onsite ? <TeamsLink url={row.teams_join_url} state="cancelled" variant="inline" /> : null;
     return {
       id: row.id,
@@ -70,19 +74,25 @@ export function AgentMeetingsScreen({ meetings, cancelled, initialTab }: { meeti
           rowCardProps: { style: { cursor: "pointer", overflow: "hidden" } },
           agMtTabs: [
             { value: "upcoming", label: "עתידיות", count: meetings.length },
+            { value: "past", label: "עברו" },
             { value: "cancelled", label: "מבוטלות", count: cancelled.length },
           ],
           agMtTab: tab,
-          onAgMtTab: (value: "upcoming" | "cancelled") => {
+          onAgMtTab: (value: MeetingsTab) => {
             setTab(value);
-            router.replace(value === "cancelled" ? "/agent?tab=cancelled" : "/agent", { scroll: false });
+            router.replace(value === "upcoming" ? "/agent" : `/agent?tab=${value}`, { scroll: false });
           },
           agCxEmpty: showCancelled && cancelled.length === 0,
         }}
       />
-      {!showCancelled && meetings.length === 0 && (
+      {tab === "upcoming" && meetings.length === 0 && (
         <Card padding="lg">
           <EmptyState icon="calendar" title="אין פגישות קרובות" description="פגישות חדשות שייקבעו לך יופיעו כאן." />
+        </Card>
+      )}
+      {showPast && past.length === 0 && (
+        <Card padding="lg">
+          <EmptyState icon="calendar" title="אין פגישות שעברו" description="פגישות שמועדן עבר יופיעו כאן." />
         </Card>
       )}
     </>
@@ -99,6 +109,7 @@ export function AgentMeetingDetailScreen({ booking }: { booking: BookingRow }) {
   const [busy, setBusy] = useState(false);
   const onsite = !!booking.in_person_address;
   const active = booking.status === "confirmed";
+  const ended = active && hasEnded(booking);
 
   async function cancel() {
     setBusy(true);
@@ -116,15 +127,15 @@ export function AgentMeetingDetailScreen({ booking }: { booking: BookingRow }) {
 
   const v = {
     ...common,
-    goAgMeetings: () => router.push(active ? "/agent" : "/agent?tab=cancelled"),
+    goAgMeetings: () => router.push(!active ? "/agent?tab=cancelled" : ended ? "/agent?tab=past" : "/agent"),
     goAgReschedule: () => router.push(`/agent/meetings/${booking.id}/reschedule`),
     openAgCancel: () => setOpen(true),
     canAct: active,
     dTime: fmtRange(booking.start_at, booking.end_at),
     dWhen: `${fmtDow(booking.start_at)} ● ${fmtDate(booking.start_at)}`,
-    ftTone: !active ? "error" : "success",
-    ftIcon: !active ? "x" : "check-circle",
-    ftLabel: !active ? "בוטלה" : "מתוכננת",
+    ftTone: !active ? "error" : ended ? "neutral" : "success",
+    ftIcon: !active ? "x" : ended ? "check" : "check-circle",
+    ftLabel: !active ? "בוטלה" : ended ? "התקיימה" : "מתוכננת",
     summaryBox: { textAlign: "start", padding: "4px 20px" },
     dCustomer: booking.customer_name,
     dLead: booking.lead_number,
